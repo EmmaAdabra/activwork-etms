@@ -86,9 +86,33 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle business rule violation exceptions (422 Unprocessable Entity)
+     * 
+     * Thrown by services when a business rule is violated.
+     * Example: Enrolling in a full course, submitting duplicate feedback.
+     */
+    @ExceptionHandler(BusinessRuleViolationException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessRuleViolation(
+            BusinessRuleViolationException ex,
+            HttpServletRequest request) {
+        
+        log.warn("Business rule violation: {}", ex.getMessage());
+        
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                "Business Rule Violation",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
+    }
+
+    /**
      * Handle illegal argument exceptions (400 Bad Request)
      * 
      * Thrown when method receives invalid arguments.
+     * Also catches business rule violations that use IllegalArgumentException.
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(
