@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${course.title} + ' - ETMS'">Course Details - ETMS</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Course Header -->
+    <div class="bg-gradient-to-r from-primary-600 to-primary-800 dark:from-primary-700 dark:to-primary-900 rounded-lg shadow-xl p-8 mb-8 text-white">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Course Info -->
+            <div class="lg:col-span-2">
+                <!-- Breadcrumb -->
+                <div class="text-primary-200 text-sm mb-4">
+                    <a th:href="@{/}" class="hover:underline">Home</a> / 
+                    <a th:href="@{/courses}" class="hover:underline">Courses</a> / 
+                    <span th:text="${course.category}">PROGRAMMING</span>
+                </div>
+                
+                <!-- Category & Difficulty -->
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <span class="px-3 py-1 bg-white/20 rounded-full text-sm font-semibold">
+                        <span th:text="${course.category}">PROGRAMMING</span>
+                    </span>
+                    <span th:class="${course.difficultyLevel == T(com.activwork.etms.model.DifficultyLevel).BEGINNER ? 'bg-green-500' : 
+                                     course.difficultyLevel == T(com.activwork.etms.model.DifficultyLevel).INTERMEDIATE ? 'bg-yellow-500' : 
+                                     course.difficultyLevel == T(com.activwork.etms.model.DifficultyLevel).ADVANCED ? 'bg-orange-500' : 'bg-red-500'}"
+                          class="px-3 py-1 rounded-full text-sm font-semibold">
+                        <span th:text="${course.difficultyLevel}">INTERMEDIATE</span>
+                    </span>
+                </div>
+                
+                <!-- Title -->
+                <h1 class="text-4xl font-bold mb-4" th:text="${course.title}">
+                    Java Spring Boot Fundamentals
+                </h1>
+                
+                <!-- Summary -->
+                <p class="text-xl text-primary-100 mb-6" th:text="${course.summary}">
+                    Master Spring Boot development from basics to advanced concepts
+                </p>
+                
+                <!-- Meta Info -->
+                <div class="flex flex-wrap gap-6 text-sm">
+                    <div class="flex items-center">
+                        <i class="fas fa-chalkboard-teacher mr-2"></i>
+                        <span>By <strong th:text="${course.instructorName}">Instructor Name</strong></span>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <i class="fas fa-clock mr-2"></i>
+                        <span th:text="${course.durationHours} + ' hours'">10 hours</span>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <i class="fas fa-users mr-2"></i>
+                        <span th:text="${course.enrollmentCount ?: 0} + ' enrolled'">50 enrolled</span>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <i class="fas fa-calendar mr-2"></i>
+                        <span>Updated <span th:text="${#temporals.format(course.updatedAt, 'MMM dd, yyyy')}">Oct 10, 2025</span></span>
+                    </div>
+                </div>
+                
+                <!-- Rating -->
+                <div class="flex items-center mt-6">
+                    <div class="flex text-yellow-400 text-xl mr-3">
+                        <i th:each="i : ${#numbers.sequence(1, 5)}" 
+                           th:class="${i <= (course.averageRating ?: 0)} ? 'fas fa-star' : 'far fa-star'"></i>
+                    </div>
+                    <span class="text-2xl font-bold mr-2">
+                        <span th:text="${course.averageRating != null ? #numbers.formatDecimal(course.averageRating, 1, 1) : '0.0'}">4.5</span>
+                    </span>
+                    <span class="text-primary-200">
+                        (<span th:text="${course.totalRatings ?: 0}">10</span> ratings)
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Enrollment Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 text-gray-900 dark:text-white h-fit">
+                <h3 class="text-2xl font-bold mb-4">Enroll Now</h3>
+                
+                <!-- Price -->
+                <div class="mb-4">
+                    <div class="text-4xl font-bold text-primary-600 dark:text-primary-400">
+                        <span th:if="${course.price == 0}">FREE</span>
+                        <span th:if="${course.price != 0}">
+                            $<span th:text="${#numbers.formatDecimal(course.price, 1, 2)}">299.99</span>
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Enrollment Info -->
+                <div class="space-y-3 mb-6 text-sm text-gray-600 dark:text-gray-400">
+                    <div class="flex items-center justify-between">
+                        <span><i class="fas fa-user-friends mr-2"></i>Seats Available:</span>
+                        <strong>
+                            <span th:text="${course.maxEnrollments - (course.enrollmentCount ?: 0)}">20</span> / 
+                            <span th:text="${course.maxEnrollments}">70</span>
+                        </strong>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <span><i class="fas fa-calendar-day mr-2"></i>Starts:</span>
+                        <strong th:text="${course.startDate != null ? #temporals.format(course.startDate, 'MMM dd, yyyy') : 'Anytime'}">Oct 15, 2025</strong>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <span><i class="fas fa-calendar-times mr-2"></i>Enrollment Deadline:</span>
+                        <strong th:text="${course.enrollmentDeadline != null ? #temporals.format(course.enrollmentDeadline, 'MMM dd') : 'N/A'}">Oct 20</strong>
+                    </div>
+                </div>
+                
+                <!-- Enroll Button (Learner Only) -->
+                <div sec:authorize="hasAuthority('LEARNER')">
+                    <form th:action="@{/learner/courses/{id}/enroll(id=${course.id})}" method="post">
+                        <button type="submit" 
+                                class="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-bold rounded-lg transition shadow-md">
+                            <i class="fas fa-check-circle mr-2"></i>Enroll in Course
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Login Prompt (Unauthenticated) -->
+                <div sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/login}" 
+                       class="block w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white text-center font-bold rounded-lg transition shadow-md">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login to Enroll
+                    </a>
+                    <p class="text-center text-sm text-gray-600 dark:text-gray-400 mt-3">
+                        Don't have an account? <a th:href="@{/register}" class="text-primary-600 dark:text-primary-400 hover:underline">Sign up</a>
+                    </p>
+                </div>
+                
+                <!-- Instructor Message -->
+                <div sec:authorize="hasAuthority('INSTRUCTOR')">
+                    <p class="text-center text-gray-600 dark:text-gray-400 text-sm">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Only learners can enroll in courses
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Course Content Tabs -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2">
+            <!-- Description Section -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                    <i class="fas fa-info-circle mr-2"></i>About This Course
+                </h2>
+                <div class="prose dark:prose-invert max-w-none">
+                    <p class="text-gray-700 dark:text-gray-300 leading-relaxed" th:text="${course.description}">
+                        This comprehensive course covers everything you need to know about Spring Boot development.
+                        You'll learn how to build production-ready applications using Spring Boot framework...
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Learning Objectives -->
+            <div th:if="${course.learningObjectives != null and !course.learningObjectives.empty}" 
+                 class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                    <i class="fas fa-bullseye mr-2"></i>What You'll Learn
+                </h2>
+                <ul class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <li th:each="objective : ${course.learningObjectives}" 
+                        class="flex items-start text-gray-700 dark:text-gray-300">
+                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
+                        <span th:text="${objective}">Spring Boot fundamentals</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Prerequisites -->
+            <div th:if="${course.prerequisites != null and !course.prerequisites.empty}" 
+                 class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                    <i class="fas fa-clipboard-check mr-2"></i>Prerequisites
+                </h2>
+                <ul class="space-y-2">
+                    <li th:each="prereq : ${course.prerequisites}" 
+                        class="flex items-start text-gray-700 dark:text-gray-300">
+                        <i class="fas fa-angle-right text-primary-600 dark:text-primary-400 mr-3 mt-1"></i>
+                        <span th:text="${prereq}">Basic Java knowledge</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div>
+            <!-- Course Features -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                    <i class="fas fa-star mr-2"></i>Course Features
+                </h3>
+                <ul class="space-y-3 text-gray-700 dark:text-gray-300">
+                    <li class="flex items-center">
+                        <i class="fas fa-video text-primary-600 dark:text-primary-400 mr-3 w-5"></i>
+                        <span>Video Lectures</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-file-pdf text-primary-600 dark:text-primary-400 mr-3 w-5"></i>
+                        <span>Downloadable Resources</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-laptop-code text-primary-600 dark:text-primary-400 mr-3 w-5"></i>
+                        <span>Hands-on Projects</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-certificate text-primary-600 dark:text-primary-400 mr-3 w-5"></i>
+                        <span>Certificate of Completion</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-infinity text-primary-600 dark:text-primary-400 mr-3 w-5"></i>
+                        <span>Lifetime Access</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-mobile-alt text-primary-600 dark:text-primary-400 mr-3 w-5"></i>
+                        <span>Mobile Friendly</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Tags -->
+            <div th:if="${course.tags != null and !course.tags.empty}" 
+                 class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                    <i class="fas fa-tags mr-2"></i>Tags
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                    <span th:each="tag : ${course.tags}" 
+                          class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-full">
+                        <span th:text="${tag}">Spring</span>
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Share -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                    <i class="fas fa-share-alt mr-2"></i>Share This Course
+                </h3>
+                <div class="flex space-x-3">
+                    <a href="#" class="flex-1 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-center rounded-lg transition">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    <a href="#" class="flex-1 py-2 px-4 bg-sky-500 hover:bg-sky-600 text-white text-center rounded-lg transition">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="flex-1 py-2 px-4 bg-blue-700 hover:bg-blue-800 text-white text-center rounded-lg transition">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Edit Course - ETMS</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            <i class="fas fa-edit mr-2"></i>Edit Course
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400">
+            Update course details - <strong th:text="${course.title}">Course Title</strong>
+        </p>
+    </div>
+    
+    <!-- Course Form -->
+    <form th:action="@{/instructor/courses/{id}/edit(id=${course.id})}" 
+          th:object="${courseUpdateDto}" 
+          method="post"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+        
+        <!-- Basic Information Section -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 pb-3 border-b border-gray-200 dark:border-gray-700">
+                <i class="fas fa-info-circle mr-2"></i>Basic Information
+            </h2>
+            
+            <div class="space-y-6">
+                <!-- Course Title -->
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Course Title <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" 
+                           id="title" 
+                           th:field="*{title}" 
+                           th:placeholder="${course.title}"
+                           class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <p th:if="${#fields.hasErrors('title')}" 
+                       th:errors="*{title}" 
+                       class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                </div>
+                
+                <!-- Course Summary -->
+                <div>
+                    <label for="summary" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Short Summary <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="summary" 
+                              th:field="*{summary}" 
+                              th:placeholder="${course.summary}"
+                              rows="2"
+                              class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"></textarea>
+                    <p th:if="${#fields.hasErrors('summary')}" 
+                       th:errors="*{summary}" 
+                       class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                </div>
+                
+                <!-- Course Description -->
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Detailed Description <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="description" 
+                              th:field="*{description}" 
+                              th:placeholder="${course.description}"
+                              rows="6"
+                              class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"></textarea>
+                    <p th:if="${#fields.hasErrors('description')}" 
+                       th:errors="*{description}" 
+                       class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                </div>
+                
+                <!-- Category and Difficulty Row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Category -->
+                    <div>
+                        <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Category
+                        </label>
+                        <select id="category" 
+                                th:field="*{category}" 
+                                class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option th:value="${course.category}" 
+                                    th:text="${course.category}" 
+                                    selected>Current Category</option>
+                            <option th:each="cat : ${T(com.activwork.etms.model.CourseCategory).values()}" 
+                                    th:value="${cat}" 
+                                    th:text="${cat}">
+                            </option>
+                        </select>
+                        <p th:if="${#fields.hasErrors('category')}" 
+                           th:errors="*{category}" 
+                           class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                    </div>
+                    
+                    <!-- Difficulty Level -->
+                    <div>
+                        <label for="difficultyLevel" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Difficulty Level
+                        </label>
+                        <select id="difficultyLevel" 
+                                th:field="*{difficultyLevel}" 
+                                class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option th:value="${course.difficultyLevel}" 
+                                    th:text="${course.difficultyLevel}" 
+                                    selected>Current Difficulty</option>
+                            <option th:each="diff : ${T(com.activwork.etms.model.DifficultyLevel).values()}" 
+                                    th:value="${diff}" 
+                                    th:text="${diff}">
+                            </option>
+                        </select>
+                        <p th:if="${#fields.hasErrors('difficultyLevel')}" 
+                           th:errors="*{difficultyLevel}" 
+                           class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                    </div>
+                </div>
+                
+                <!-- Duration and Max Enrollments -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Duration -->
+                    <div>
+                        <label for="durationHours" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Duration (Hours)
+                        </label>
+                        <input type="number" 
+                               id="durationHours" 
+                               th:field="*{durationHours}" 
+                               th:placeholder="${course.durationHours}"
+                               min="1"
+                               class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <p th:if="${#fields.hasErrors('durationHours')}" 
+                           th:errors="*{durationHours}" 
+                           class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                    </div>
+                    
+                    <!-- Max Enrollments -->
+                    <div>
+                        <label for="maxEnrollments" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Maximum Enrollments
+                        </label>
+                        <input type="number" 
+                               id="maxEnrollments" 
+                               th:field="*{maxEnrollments}" 
+                               th:placeholder="${course.maxEnrollments}"
+                               min="1"
+                               class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <p th:if="${#fields.hasErrors('maxEnrollments')}" 
+                           th:errors="*{maxEnrollments}" 
+                           class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Form Actions -->
+        <div class="flex flex-col md:flex-row gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <button type="submit" 
+                    class="flex-1 py-3 px-6 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-semibold rounded-lg shadow-md transition">
+                <i class="fas fa-save mr-2"></i>Save Changes
+            </button>
+            
+            <a th:href="@{/instructor/courses}" 
+               class="flex-1 py-3 px-6 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-center font-semibold rounded-lg transition">
+                <i class="fas fa-times mr-2"></i>Cancel
+            </a>
+        </div>
+    </form>
+</div>
+</body>
+</html>
+

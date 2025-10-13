@@ -56,7 +56,7 @@ public class LiveSession {
     private Integer durationMinutes;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "session_status")
+    @Column(length = 50)
     private SessionStatus status = SessionStatus.SCHEDULED;
 
     @Column(name = "meeting_link", length = 500)

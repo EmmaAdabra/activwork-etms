@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Submit Feedback - ETMS</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            <i class="fas fa-star mr-2"></i>Rate Course
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400">
+            Share your experience with <strong th:text="${course.title}">this course</strong>
+        </p>
+    </div>
+    
+    <!-- Course Info Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+        <div class="flex items-center gap-6">
+            <div class="w-24 h-24 bg-gradient-to-r from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
+                <i class="fas fa-book text-white text-4xl"></i>
+            </div>
+            
+            <div class="flex-1">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2" th:text="${course.title}">
+                    Java Spring Boot Fundamentals
+                </h2>
+                <p class="text-gray-600 dark:text-gray-400">
+                    <i class="fas fa-user mr-1"></i>
+                    Instructor: <span th:text="${course.instructorName}">Instructor Name</span>
+                </p>
+                <p class="text-gray-600 dark:text-gray-400">
+                    <i class="fas fa-tag mr-1"></i>
+                    <span th:text="${course.category}">PROGRAMMING</span> • 
+                    <span th:text="${course.difficultyLevel}">INTERMEDIATE</span>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Feedback Form -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+        <form th:action="@{/learner/courses/{id}/feedback(id=${course.id})}" 
+              th:object="${feedbackDto}" 
+              method="post"
+              class="space-y-6">
+            
+            <!-- Rating Section -->
+            <div>
+                <label class="block text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    How would you rate this course? <span class="text-red-500">*</span>
+                </label>
+                
+                <div class="flex items-center gap-3 mb-2">
+                    <!-- Star Rating Input -->
+                    <div id="starRating" class="flex gap-2">
+                        <i th:each="i : ${#numbers.sequence(1, 5)}" 
+                           th:attr="data-rating=${i}"
+                           class="star-icon far fa-star text-4xl text-gray-300 cursor-pointer hover:text-yellow-400 transition"></i>
+                    </div>
+                    
+                    <span id="ratingText" class="text-xl font-semibold text-gray-900 dark:text-white ml-4">
+                        No rating
+                    </span>
+                </div>
+                
+                <!-- Hidden input for rating value -->
+                <input type="hidden" id="ratingValue" th:field="*{rating}" required>
+                
+                <p th:if="${#fields.hasErrors('rating')}" 
+                   th:errors="*{rating}" 
+                   class="mt-2 text-sm text-red-600 dark:text-red-400"></p>
+            </div>
+            
+            <!-- Comment Section -->
+            <div>
+                <label for="comment" class="block text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    Share your thoughts <span class="text-red-500">*</span>
+                </label>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                    Tell us about your learning experience. What did you like? What could be improved?
+                </p>
+                <textarea id="comment" 
+                          th:field="*{comment}" 
+                          required
+                          rows="8"
+                          class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          placeholder="Write your detailed feedback here..."></textarea>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Minimum 20 characters
+                </p>
+                <p th:if="${#fields.hasErrors('comment')}" 
+                   th:errors="*{comment}" 
+                   class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+            </div>
+            
+            <!-- Guidelines -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-lg">
+                <h4 class="font-semibold text-blue-900 dark:text-blue-300 mb-2">
+                    <i class="fas fa-info-circle mr-1"></i>Feedback Guidelines
+                </h4>
+                <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                    <li><i class="fas fa-check mr-2"></i>Be honest and constructive</li>
+                    <li><i class="fas fa-check mr-2"></i>Focus on the course content and teaching quality</li>
+                    <li><i class="fas fa-check mr-2"></i>Mention specific aspects you liked or areas for improvement</li>
+                    <li><i class="fas fa-check mr-2"></i>Keep feedback respectful and professional</li>
+                </ul>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="flex flex-col md:flex-row gap-4 pt-4">
+                <button type="submit" 
+                        class="flex-1 py-3 px-6 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-semibold rounded-lg shadow-md transition">
+                    <i class="fas fa-paper-plane mr-2"></i>Submit Feedback
+                </button>
+                
+                <a th:href="@{/learner/enrollments}" 
+                   class="flex-1 py-3 px-6 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-center font-semibold rounded-lg transition">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        // Star rating functionality
+        const stars = document.querySelectorAll('.star-icon');
+        const ratingValue = document.getElementById('ratingValue');
+        const ratingText = document.getElementById('ratingText');
+        
+        const ratingLabels = {
+            1: 'Poor',
+            2: 'Fair',
+            3: 'Good',
+            4: 'Very Good',
+            5: 'Excellent'
+        };
+        
+        let selectedRating = 0;
+        
+        stars.forEach(star => {
+            // Hover effect
+            star.addEventListener('mouseenter', () => {
+                const rating = parseInt(star.getAttribute('data-rating'));
+                highlightStars(rating);
+            });
+            
+            // Click to select
+            star.addEventListener('click', () => {
+                selectedRating = parseInt(star.getAttribute('data-rating'));
+                ratingValue.value = selectedRating;
+                ratingText.textContent = ratingLabels[selectedRating];
+                highlightStars(selectedRating, true);
+            });
+        });
+        
+        // Reset on mouse leave
+        document.getElementById('starRating').addEventListener('mouseleave', () => {
+            if (selectedRating > 0) {
+                highlightStars(selectedRating, true);
+            } else {
+                resetStars();
+            }
+        });
+        
+        function highlightStars(rating, filled = false) {
+            stars.forEach(star => {
+                const starRating = parseInt(star.getAttribute('data-rating'));
+                if (starRating <= rating) {
+                    star.classList.remove('far', 'text-gray-300');
+                    star.classList.add('fas', 'text-yellow-400');
+                } else {
+                    star.classList.remove('fas', 'text-yellow-400');
+                    star.classList.add('far', 'text-gray-300');
+                }
+            });
+        }
+        
+        function resetStars() {
+            stars.forEach(star => {
+                star.classList.remove('fas', 'text-yellow-400');
+                star.classList.add('far', 'text-gray-300');
+            });
+        }
+    </script>
+</th:block>
+</body>
+</html>
+

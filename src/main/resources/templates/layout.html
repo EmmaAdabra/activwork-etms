@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle != null ? pageTitle + ' - ETMS' : 'Employment Training Management System'}">ETMS</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#EEF2FF',
+                            100: '#E0E7FF',
+                            200: '#C7D2FE',
+                            300: '#A5B4FC',
+                            400: '#818CF8',
+                            500: '#6366F1',
+                            600: '#4F46E5',
+                            700: '#4338CA',
+                            800: '#3730A3',
+                            900: '#312E81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Styles -->
+    <style>
+        /* Smooth transitions for dark mode */
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        /* Star rating styles */
+        .star-rating {
+            display: inline-flex;
+            gap: 0.25rem;
+        }
+        
+        .star-rating i {
+            cursor: pointer;
+            font-size: 1.25rem;
+        }
+        
+        .star-rating i.filled {
+            color: #FBBF24;
+        }
+        
+        .star-rating i.empty {
+            color: #D1D5DB;
+        }
+        
+        /* Progress bar animation */
+        .progress-bar-fill {
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
+
+    <!-- Header with Navigation -->
+    <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a th:href="@{/}" class="flex items-center space-x-2">
+                    <i class="fas fa-graduation-cap text-primary-600 dark:text-primary-400 text-3xl"></i>
+                    <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">ETMS</span>
+                </a>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <!-- Public Links -->
+                    <a th:href="@{/}" class="hover:text-primary-600 dark:hover:text-primary-400">Home</a>
+                    <a th:href="@{/courses}" class="hover:text-primary-600 dark:hover:text-primary-400">Courses</a>
+                    
+                    <!-- Authenticated User Links -->
+                    <div sec:authorize="isAuthenticated()">
+                        <a th:href="@{/dashboard}" class="hover:text-primary-600 dark:hover:text-primary-400">Dashboard</a>
+                        
+                        <!-- Instructor-only Links -->
+                        <a sec:authorize="hasAuthority('INSTRUCTOR')" 
+                           th:href="@{/instructor/courses}" 
+                           class="hover:text-primary-600 dark:hover:text-primary-400">My Courses</a>
+                        
+                        <!-- Learner-only Links -->
+                        <a sec:authorize="hasAuthority('LEARNER')" 
+                           th:href="@{/learner/enrollments}" 
+                           class="hover:text-primary-600 dark:hover:text-primary-400">My Enrollments</a>
+                    </div>
+                </div>
+                
+                <!-- Right Side Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- Dark Mode Toggle -->
+                    <button id="darkModeToggle" 
+                            class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+                            aria-label="Toggle Dark Mode">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:inline"></i>
+                    </button>
+                    
+                    <!-- Authentication Buttons -->
+                    <div sec:authorize="!isAuthenticated()" class="hidden md:flex space-x-2">
+                        <a th:href="@{/login}" 
+                           class="px-4 py-2 rounded-lg border border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-700">
+                            Login
+                        </a>
+                        <a th:href="@{/register}" 
+                           class="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600">
+                            Register
+                        </a>
+                    </div>
+                    
+                    <!-- User Menu (Authenticated) -->
+                    <div sec:authorize="isAuthenticated()" class="relative hidden md:block">
+                        <button id="userMenuButton" 
+                                class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">
+                            <i class="fas fa-user"></i>
+                            <span sec:authentication="name">user@email.com</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div id="userMenuDropdown" 
+                             class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2">
+                            <a th:href="@{/dashboard}" 
+                               class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                            </a>
+                            <hr class="my-2 border-gray-200 dark:border-gray-700">
+                            <form th:action="@{/logout}" method="post" class="block">
+                                <button type="submit" 
+                                        class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 dark:text-red-400">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Mobile Menu Toggle -->
+                    <button id="mobileMenuToggle" 
+                            class="md:hidden p-2 rounded-lg bg-gray-200 dark:bg-gray-700">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Navigation -->
+            <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                <div class="flex flex-col space-y-3">
+                    <a th:href="@{/}" class="hover:text-primary-600 dark:hover:text-primary-400">Home</a>
+                    <a th:href="@{/courses}" class="hover:text-primary-600 dark:hover:text-primary-400">Courses</a>
+                    
+                    <div sec:authorize="isAuthenticated()">
+                        <a th:href="@{/dashboard}" class="hover:text-primary-600 dark:hover:text-primary-400">Dashboard</a>
+                        
+                        <a sec:authorize="hasAuthority('INSTRUCTOR')" 
+                           th:href="@{/instructor/courses}" 
+                           class="hover:text-primary-600 dark:hover:text-primary-400">My Courses</a>
+                        
+                        <a sec:authorize="hasAuthority('LEARNER')" 
+                           th:href="@{/learner/enrollments}" 
+                           class="hover:text-primary-600 dark:hover:text-primary-400">My Enrollments</a>
+                        
+                        <hr class="my-2 border-gray-200 dark:border-gray-700">
+                        
+                        <form th:action="@{/logout}" method="post">
+                            <button type="submit" class="text-red-600 dark:text-red-400">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div sec:authorize="!isAuthenticated()">
+                        <a th:href="@{/login}" 
+                           class="block px-4 py-2 text-center rounded-lg border border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400">
+                            Login
+                        </a>
+                        <a th:href="@{/register}" 
+                           class="block px-4 py-2 text-center rounded-lg bg-primary-600 text-white dark:bg-primary-500 mt-2">
+                            Register
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <!-- Flash Messages -->
+    <div class="container mx-auto px-4 mt-4">
+        <!-- Success Message -->
+        <div th:if="${success}" 
+             class="bg-green-100 dark:bg-green-900 border-l-4 border-green-500 text-green-700 dark:text-green-200 p-4 rounded-lg mb-4 flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle mr-3"></i>
+                <span th:text="${success}">Success message</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-green-700 dark:text-green-200 hover:text-green-900 dark:hover:text-green-100">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Error Message -->
+        <div th:if="${error}" 
+             class="bg-red-100 dark:bg-red-900 border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4 flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle mr-3"></i>
+                <span th:text="${error}">Error message</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-red-700 dark:text-red-200 hover:text-red-900 dark:hover:text-red-100">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Info Message -->
+        <div th:if="${message}" 
+             class="bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500 text-blue-700 dark:text-blue-200 p-4 rounded-lg mb-4 flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-info-circle mr-3"></i>
+                <span th:text="${message}">Info message</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-blue-700 dark:text-blue-200 hover:text-blue-900 dark:hover:text-blue-100">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <div layout:fragment="content">
+            <!-- Page content will be injected here -->
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-center md:text-left mb-4 md:mb-0">
+                    <p class="text-gray-600 dark:text-gray-400">
+                        &copy; 2025 <span class="font-semibold text-primary-600 dark:text-primary-400">ETMS</span>. 
+                        Employment Training Management System.
+                    </p>
+                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                        Demonstrating Layered Architecture, MVC, and GRASP Patterns
+                    </p>
+                </div>
+                
+                <div class="flex space-x-4 text-gray-600 dark:text-gray-400">
+                    <a href="#" class="hover:text-primary-600 dark:hover:text-primary-400">
+                        <i class="fab fa-github text-xl"></i>
+                    </a>
+                    <a href="#" class="hover:text-primary-600 dark:hover:text-primary-400">
+                        <i class="fab fa-linkedin text-xl"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Dark Mode Script -->
+    <script>
+        // Dark mode toggle functionality
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const html = document.documentElement;
+        
+        // Check for saved theme preference or default to light mode
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        
+        // Apply saved theme on page load
+        if (currentTheme === 'dark') {
+            html.classList.add('dark');
+        }
+        
+        // Toggle dark mode
+        darkModeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            
+            // Save preference to localStorage
+            const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
+            localStorage.setItem('theme', newTheme);
+        });
+        
+        // User menu dropdown toggle
+        const userMenuButton = document.getElementById('userMenuButton');
+        const userMenuDropdown = document.getElementById('userMenuDropdown');
+        
+        if (userMenuButton && userMenuDropdown) {
+            userMenuButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userMenuDropdown.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                userMenuDropdown.classList.add('hidden');
+            });
+        }
+        
+        // Mobile menu toggle
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        
+        mobileMenuToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(() => {
+            const flashMessages = document.querySelectorAll('[class*="bg-green-100"], [class*="bg-red-100"], [class*="bg-blue-100"]');
+            flashMessages.forEach(msg => {
+                msg.style.transition = 'opacity 0.5s';
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 500);
+            });
+        }, 5000);
+    </script>
+    
+    <!-- Additional page-specific scripts -->
+    <th:block layout:fragment="scripts">
+        <!-- Page-specific scripts will be injected here -->
+    </th:block>
+</body>
+</html>
+

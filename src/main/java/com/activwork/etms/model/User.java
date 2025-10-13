@@ -45,10 +45,10 @@ public class User {
 
     @NotNull(message = "Role is required")
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "user_role")
+    @Column(nullable = false, length = 50)
     private UserRole role;
 
-    @Pattern(regexp = "^\\+?[1-9]\\d{1,14}$", message = "Invalid phone number format")
+    @Pattern(regexp = "^(\\+44|0)[0-9]{10,11}$|^$", message = "Please enter a valid UK phone number (e.g., 07123456789 or +447123456789)")
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
@@ -79,6 +79,7 @@ public class User {
     private String languagePreference = "en";
 
     @Column(name = "notification_preferences", columnDefinition = "jsonb")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     private String notificationPreferences = "{\"email\": true, \"push\": true, \"sms\": false}";
 
     @Column(name = "created_at", nullable = false, updatable = false)

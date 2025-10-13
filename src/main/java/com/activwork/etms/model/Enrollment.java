@@ -50,7 +50,7 @@ public class Enrollment {
     private ZonedDateTime enrolledAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "enrollment_status")
+    @Column(length = 50)
     private EnrollmentStatus status = EnrollmentStatus.ACTIVE;
 
     @DecimalMin(value = "0.0", message = "Progress must be non-negative")

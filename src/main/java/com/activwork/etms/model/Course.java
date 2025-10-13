@@ -51,12 +51,12 @@ public class Course {
 
     @NotNull(message = "Category is required")
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "course_category")
+    @Column(nullable = false, length = 50)
     private CourseCategory category;
 
     @NotNull(message = "Difficulty level is required")
     @Enumerated(EnumType.STRING)
-    @Column(name = "difficulty_level", nullable = false, columnDefinition = "difficulty_level")
+    @Column(name = "difficulty_level", nullable = false, length = 50)
     private DifficultyLevel difficultyLevel;
 
     @NotNull(message = "Duration is required")
@@ -76,7 +76,7 @@ public class Course {
     private BigDecimal price = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "course_status")
+    @Column(length = 50)
     private CourseStatus status = CourseStatus.DRAFT;
 
     @Column(name = "thumbnail_url", length = 500)

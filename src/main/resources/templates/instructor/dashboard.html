@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Instructor Dashboard - ETMS</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Welcome Section -->
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            Welcome back, <span th:text="${user.name}">Instructor</span>!
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400">
+            Manage your courses and track student progress
+        </p>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Total Courses -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Courses</p>
+                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white" th:text="${totalCourses}">6</h3>
+                </div>
+                <div class="bg-primary-100 dark:bg-primary-900 rounded-full p-4">
+                    <i class="fas fa-book text-2xl text-primary-600 dark:text-primary-400"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Published Courses -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Published</p>
+                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white">
+                        <span th:text="${#lists.size(#lists.filter(courses, c -> c.status.name() == 'PUBLISHED'))}">4</span>
+                    </h3>
+                </div>
+                <div class="bg-green-100 dark:bg-green-900 rounded-full p-4">
+                    <i class="fas fa-check-circle text-2xl text-green-600 dark:text-green-400"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Draft Courses -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Drafts</p>
+                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white">
+                        <span th:text="${#lists.size(#lists.filter(courses, c -> c.status.name() == 'DRAFT'))}">2</span>
+                    </h3>
+                </div>
+                <div class="bg-yellow-100 dark:bg-yellow-900 rounded-full p-4">
+                    <i class="fas fa-edit text-2xl text-yellow-600 dark:text-yellow-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="bg-gradient-to-r from-primary-600 to-primary-800 dark:from-primary-700 dark:to-primary-900 rounded-lg shadow-xl p-8 mb-8 text-white">
+        <h2 class="text-2xl font-bold mb-6">
+            <i class="fas fa-bolt mr-2"></i>Quick Actions
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a th:href="@{/instructor/courses/create}" 
+               class="bg-white/10 hover:bg-white/20 rounded-lg p-6 text-center transition backdrop-blur-sm">
+                <i class="fas fa-plus-circle text-4xl mb-3"></i>
+                <p class="font-semibold">Create New Course</p>
+            </a>
+            
+            <a th:href="@{/instructor/courses}" 
+               class="bg-white/10 hover:bg-white/20 rounded-lg p-6 text-center transition backdrop-blur-sm">
+                <i class="fas fa-book text-4xl mb-3"></i>
+                <p class="font-semibold">Manage Courses</p>
+            </a>
+            
+            <a href="#recent-courses" 
+               class="bg-white/10 hover:bg-white/20 rounded-lg p-6 text-center transition backdrop-blur-sm">
+                <i class="fas fa-chart-line text-4xl mb-3"></i>
+                <p class="font-semibold">View Analytics</p>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Recent Courses -->
+    <div id="recent-courses" class="mb-8">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                <i class="fas fa-book-open mr-2"></i>Your Courses
+            </h2>
+            <a th:href="@{/instructor/courses}" 
+               class="text-primary-600 dark:text-primary-400 hover:underline font-semibold">
+                View All <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        
+        <!-- Courses List -->
+        <div th:if="${courses != null and !courses.empty}" class="space-y-4">
+            <div th:each="course : ${courses}" 
+                 class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <!-- Course Info -->
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                                <a th:href="@{/courses/{id}(id=${course.id})}" 
+                                   th:text="${course.title}"
+                                   class="hover:text-primary-600 dark:hover:text-primary-400">
+                                    Java Spring Boot Fundamentals
+                                </a>
+                            </h3>
+                            
+                            <!-- Status Badge -->
+                            <span th:class="${course.status.name() == 'PUBLISHED' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' : 
+                                             course.status.name() == 'DRAFT' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300' : 
+                                             'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}"
+                                  class="px-3 py-1 text-xs font-semibold rounded-full">
+                                <span th:text="${course.status}">PUBLISHED</span>
+                            </span>
+                        </div>
+                        
+                        <!-- Course Meta -->
+                        <div class="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
+                            <span>
+                                <i class="fas fa-tag mr-1"></i>
+                                <span th:text="${course.category}">PROGRAMMING</span>
+                            </span>
+                            <span>
+                                <i class="fas fa-users mr-1"></i>
+                                <span th:text="${course.enrollmentCount ?: 0} + ' enrolled'">50 enrolled</span>
+                            </span>
+                            <span>
+                                <i class="fas fa-star mr-1 text-yellow-500"></i>
+                                <span th:text="${course.averageRating != null ? #numbers.formatDecimal(course.averageRating, 1, 1) : '0.0'}">4.5</span>
+                                (<span th:text="${course.totalRatings ?: 0}">10</span>)
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="flex flex-wrap gap-2">
+                        <a th:href="@{/instructor/courses/{id}/edit(id=${course.id})}" 
+                           class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition">
+                            <i class="fas fa-edit mr-1"></i>Edit
+                        </a>
+                        
+                        <a th:href="@{/instructor/courses/{id}/enrollments(id=${course.id})}" 
+                           class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition">
+                            <i class="fas fa-users mr-1"></i>Enrollments
+                        </a>
+                        
+                        <a th:href="@{/instructor/courses/{id}/feedback(id=${course.id})}" 
+                           class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition">
+                            <i class="fas fa-comments mr-1"></i>Feedback
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Empty State -->
+        <div th:if="${courses == null or courses.empty}" 
+             class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <i class="fas fa-book text-6xl text-gray-400 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Courses Yet</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-6">
+                Start creating your first course and share your knowledge!
+            </p>
+            <a th:href="@{/instructor/courses/create}" 
+               class="inline-block px-6 py-3 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-semibold rounded-lg transition">
+                <i class="fas fa-plus mr-2"></i>Create First Course
+            </a>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+

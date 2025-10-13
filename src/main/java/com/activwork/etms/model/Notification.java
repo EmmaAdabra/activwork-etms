@@ -54,6 +54,7 @@ public class Notification {
     private String actionUrl;
 
     @Column(columnDefinition = "jsonb")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     private String metadata;
 
     @Column(name = "created_at", nullable = false, updatable = false)

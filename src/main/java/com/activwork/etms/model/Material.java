@@ -48,7 +48,7 @@ public class Material {
 
     @NotNull(message = "Material type is required")
     @Enumerated(EnumType.STRING)
-    @Column(name = "material_type", nullable = false, columnDefinition = "material_type")
+    @Column(name = "material_type", nullable = false, length = 50)
     private MaterialType materialType;
 
     @NotBlank(message = "Path is required")

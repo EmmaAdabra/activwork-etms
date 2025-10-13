@@ -118,7 +118,26 @@ public class AuthController {
             
         } catch (Exception e) {
             log.error("Registration failed", e);
-            bindingResult.rejectValue("email", "error.registration", e.getMessage());
+            
+            // Handle specific validation errors
+            if (e.getCause() instanceof jakarta.validation.ConstraintViolationException) {
+                jakarta.validation.ConstraintViolationException cve = (jakarta.validation.ConstraintViolationException) e.getCause();
+                for (var violation : cve.getConstraintViolations()) {
+                    String field = violation.getPropertyPath().toString();
+                    String message = violation.getMessage();
+                    
+                    if (field.equals("phoneNumber")) {
+                        bindingResult.rejectValue("phoneNumber", "error.phoneNumber", message);
+                    } else {
+                        bindingResult.rejectValue("email", "error.registration", message);
+                    }
+                }
+            } else {
+                // Generic error message for users - add to global errors, not email field
+                bindingResult.reject("error.registration", 
+                    "Registration failed. Please check your information and try again.");
+            }
+            
             return "auth/register";
         }
     }

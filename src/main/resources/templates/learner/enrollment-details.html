@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Enrollment Details - ETMS</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Breadcrumb -->
+    <div class="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-6">
+        <a th:href="@{/learner/enrollments}" class="hover:underline">My Enrollments</a>
+        <i class="fas fa-chevron-right mx-2"></i>
+        <span th:text="${enrollment.courseTitle}">Course Title</span>
+    </div>
+    
+    <!-- Course Header -->
+    <div class="bg-gradient-to-r from-primary-600 to-primary-800 dark:from-primary-700 dark:to-primary-900 rounded-lg shadow-xl p-8 mb-8 text-white">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+            <div class="flex-1">
+                <h1 class="text-4xl font-bold mb-4" th:text="${enrollment.courseTitle}">
+                    Java Spring Boot Fundamentals
+                </h1>
+                
+                <!-- Status Badge -->
+                <div class="inline-flex items-center gap-2 mb-4">
+                    <span th:class="${enrollment.status.name() == 'ACTIVE' ? 'bg-green-500' : 
+                                     enrollment.status.name() == 'COMPLETED' ? 'bg-blue-500' : 'bg-gray-500'}"
+                          class="px-3 py-1 text-white text-sm font-semibold rounded-full">
+                        <i th:class="${enrollment.status.name() == 'COMPLETED' ? 'fas fa-check-circle' : 'fas fa-clock'}" class="mr-1"></i>
+                        <span th:text="${enrollment.status}">ACTIVE</span>
+                    </span>
+                    
+                    <span th:if="${enrollment.certificateIssued}" class="px-3 py-1 bg-yellow-500 text-white text-sm font-semibold rounded-full">
+                        <i class="fas fa-certificate mr-1"></i>Certificate Earned
+                    </span>
+                </div>
+                
+                <!-- Enrollment Info -->
+                <div class="flex flex-wrap gap-6 text-sm text-primary-100">
+                    <div>
+                        <i class="fas fa-calendar mr-1"></i>
+                        Enrolled: <span th:text="${#temporals.format(enrollment.enrolledAt, 'MMM dd, yyyy')}">Oct 10, 2025</span>
+                    </div>
+                    
+                    <div th:if="${enrollment.lastAccessed != null}">
+                        <i class="fas fa-clock mr-1"></i>
+                        Last accessed: <span th:text="${#temporals.format(enrollment.lastAccessed, 'MMM dd, yyyy')}">Oct 12, 2025</span>
+                    </div>
+                    
+                    <div th:if="${enrollment.completionDate != null}">
+                        <i class="fas fa-trophy mr-1"></i>
+                        Completed: <span th:text="${#temporals.format(enrollment.completionDate, 'MMM dd, yyyy')}">Oct 15, 2025</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress Card -->
+            <div class="bg-white/10 backdrop-blur-sm rounded-lg p-6 min-w-[250px]">
+                <div class="text-center mb-4">
+                    <div class="text-5xl font-bold mb-2" 
+                         th:text="${enrollment.progressPercent != null ? #numbers.formatDecimal(enrollment.progressPercent, 1, 0) + '%' : '0%'}">
+                        75%
+                    </div>
+                    <p class="text-primary-100">Overall Progress</p>
+                </div>
+                
+                <div class="w-full bg-white/20 rounded-full h-4 mb-4">
+                    <div class="bg-white h-4 rounded-full progress-bar-fill" 
+                         th:style="'width: ' + ${enrollment.progressPercent ?: 0} + '%'"></div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 text-center text-sm">
+                    <div>
+                        <p class="text-primary-100">Materials</p>
+                        <p class="font-bold">
+                            <span th:text="${enrollment.completedMaterials ?: 0}">5</span>/<span th:text="${enrollment.totalMaterials ?: 0}">10</span>
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-primary-100">Time</p>
+                        <p class="font-bold">
+                            <span th:text="${enrollment.timeSpentMinutes != null ? (enrollment.timeSpentMinutes / 60) : 0}">5</span>h
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="flex flex-wrap gap-4 mb-8">
+        <a th:href="@{/courses/{id}(id=${enrollment.courseId})}" 
+           class="px-6 py-3 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-semibold rounded-lg transition">
+            <i class="fas fa-info-circle mr-2"></i>View Course Details
+        </a>
+        
+        <a th:href="@{/learner/courses/{id}/feedback(id=${enrollment.courseId})}" 
+           class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition">
+            <i class="fas fa-star mr-2"></i>Rate Course
+        </a>
+        
+        <a th:if="${enrollment.certificateIssued and enrollment.certificateUrl != null}" 
+           th:href="${enrollment.certificateUrl}" 
+           target="_blank"
+           class="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded-lg transition">
+            <i class="fas fa-download mr-2"></i>Download Certificate
+        </a>
+        
+        <form th:if="${enrollment.status.name() == 'ACTIVE'}"
+              th:action="@{/learner/enrollments/{id}/cancel(id=${enrollment.id})}" 
+              method="post"
+              onsubmit="return confirm('Are you sure you want to cancel this enrollment?')">
+            <button type="submit" 
+                    class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition">
+                <i class="fas fa-times-circle mr-2"></i>Cancel Enrollment
+            </button>
+        </form>
+    </div>
+    
+    <!-- Notes Section -->
+    <div th:if="${enrollment.notes != null and !#strings.isEmpty(enrollment.notes)}" 
+         class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-6 rounded-lg mb-8">
+        <h3 class="text-lg font-semibold text-yellow-900 dark:text-yellow-300 mb-2">
+            <i class="fas fa-sticky-note mr-2"></i>Your Notes
+        </h3>
+        <p class="text-yellow-800 dark:text-yellow-200" th:text="${enrollment.notes}">
+            Course notes will appear here
+        </p>
+    </div>
+    
+    <!-- Course Materials Section (Placeholder) -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            <i class="fas fa-folder-open mr-2"></i>Course Materials
+        </h2>
+        
+        <div class="space-y-4">
+            <!-- This is a placeholder - Material listing would require MaterialService integration -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 text-center">
+                <i class="fas fa-info-circle text-4xl text-gray-400 mb-3"></i>
+                <p class="text-gray-600 dark:text-gray-400">
+                    Course materials and learning content will be displayed here
+                </p>
+                <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                    This feature requires material management integration
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+

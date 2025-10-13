@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Register - ETMS</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="min-h-[70vh] flex items-center justify-center py-12">
+        <div class="w-full max-w-2xl">
+            <!-- Registration Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+                <!-- Header -->
+                <div class="text-center mb-8">
+                    <i class="fas fa-user-plus text-primary-600 dark:text-primary-400 text-5xl mb-4"></i>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Create Account</h1>
+                    <p class="text-gray-600 dark:text-gray-400">Join ETMS and start your learning journey</p>
+                </div>
+                
+                <!-- Registration Form -->
+                <form th:action="@{/register}" 
+                      th:object="${userRegistrationDto}" 
+                      method="post" 
+                      class="space-y-6">
+                    
+                    <!-- Global Error Messages -->
+                    <div th:if="${#fields.hasGlobalErrors()}" class="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            <div>
+                                <div th:each="error : ${#fields.globalErrors()}" th:text="${error}" class="block"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Role Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                            <i class="fas fa-user-tag mr-1"></i>I want to register as:
+                        </label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Learner Option -->
+                            <label class="relative flex items-center p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-primary-500 transition">
+                                <input type="radio" 
+                                       th:field="*{role}" 
+                                       value="LEARNER" 
+                                       class="sr-only peer"
+                                       checked>
+                                <div class="w-full text-center peer-checked:text-primary-600 dark:peer-checked:text-primary-400">
+                                    <i class="fas fa-user-graduate text-3xl mb-2"></i>
+                                    <p class="font-semibold">Learner</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Enroll in courses</p>
+                                </div>
+                                <div class="absolute top-2 right-2 w-5 h-5 border-2 border-gray-300 rounded-full peer-checked:border-primary-600 peer-checked:bg-primary-600">
+                                    <i class="fas fa-check text-white text-xs hidden peer-checked:block"></i>
+                                </div>
+                            </label>
+                            
+                            <!-- Instructor Option -->
+                            <label class="relative flex items-center p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-primary-500 transition">
+                                <input type="radio" 
+                                       th:field="*{role}" 
+                                       value="INSTRUCTOR" 
+                                       class="sr-only peer">
+                                <div class="w-full text-center peer-checked:text-primary-600 dark:peer-checked:text-primary-400">
+                                    <i class="fas fa-chalkboard-teacher text-3xl mb-2"></i>
+                                    <p class="font-semibold">Instructor</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Create courses</p>
+                                </div>
+                                <div class="absolute top-2 right-2 w-5 h-5 border-2 border-gray-300 rounded-full peer-checked:border-primary-600 peer-checked:bg-primary-600">
+                                    <i class="fas fa-check text-white text-xs hidden peer-checked:block"></i>
+                                </div>
+                            </label>
+                        </div>
+                        <p th:if="${#fields.hasErrors('role')}" 
+                           th:errors="*{role}" 
+                           class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                    </div>
+                    
+                    <!-- Name and Email Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Full Name -->
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Full Name
+                            </label>
+                            <input type="text" 
+                                   id="name" 
+                                   th:field="*{name}" 
+                                   required
+                                   class="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                   placeholder="John Doe">
+                            <p th:if="${#fields.hasErrors('name')}" 
+                               th:errors="*{name}" 
+                               class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                        </div>
+                        
+                        <!-- Email -->
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Email Address
+                            </label>
+                            <input type="email" 
+                                   id="email" 
+                                   th:field="*{email}" 
+                                   required
+                                   class="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                   placeholder="john.doe@email.com">
+                            <p th:if="${#fields.hasErrors('email')}" 
+                               th:errors="*{email}" 
+                               class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Password and Confirm Password Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Password -->
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Password
+                            </label>
+                            <input type="password" 
+                                   id="password" 
+                                   th:field="*{password}" 
+                                   required
+                                   minlength="8"
+                                   class="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                   placeholder="••••••••">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Minimum 8 characters</p>
+                            <p th:if="${#fields.hasErrors('password')}" 
+                               th:errors="*{password}" 
+                               class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                        </div>
+                        
+                        <!-- Confirm Password -->
+                        <div>
+                            <label for="confirmPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Confirm Password
+                            </label>
+                            <input type="password" 
+                                   id="confirmPassword" 
+                                   name="confirmPassword" 
+                                   required
+                                   class="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                   placeholder="••••••••">
+                        </div>
+                    </div>
+                    
+                    <!-- Phone Number (Optional) -->
+                    <div>
+                        <label for="phoneNumber" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Phone Number <span class="text-gray-400">(Optional)</span>
+                        </label>
+                        <input type="tel" 
+                               id="phoneNumber" 
+                               th:field="*{phoneNumber}" 
+                               class="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                               placeholder="07123456789"
+                               pattern="^(\\+44|0)[0-9]{10,11}$">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        UK format: 07123456789 or +447123456789 (optional)
+                    </p>
+                    <p th:if="${#fields.hasErrors('phoneNumber')}" 
+                       th:errors="*{phoneNumber}" 
+                       class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                    </div>
+                    
+                    <!-- Terms and Conditions -->
+                    <div class="flex items-start">
+                        <input type="checkbox" 
+                               id="terms" 
+                               required
+                               class="h-4 w-4 mt-1 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                        <label for="terms" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                            I agree to the <a href="#" class="text-primary-600 dark:text-primary-400 hover:underline">Terms and Conditions</a> 
+                            and <a href="#" class="text-primary-600 dark:text-primary-400 hover:underline">Privacy Policy</a>
+                        </label>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <button type="submit" 
+                            class="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition duration-200">
+                        <i class="fas fa-user-plus mr-2"></i>Create Account
+                    </button>
+                </form>
+                
+                <!-- Divider -->
+                <div class="mt-6 text-center">
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Already have an account? 
+                        <a th:href="@{/login}" class="text-primary-600 dark:text-primary-400 font-semibold hover:underline">
+                            Sign in
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        // Password confirmation validation
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirmPassword');
+        
+        function validatePassword() {
+            if (password.value !== confirmPassword.value) {
+                confirmPassword.setCustomValidity('Passwords do not match');
+            } else {
+                confirmPassword.setCustomValidity('');
+            }
+        }
+        
+        password.addEventListener('change', validatePassword);
+        confirmPassword.addEventListener('keyup', validatePassword);
+    </script>
+</th:block>
+</body>
+</html>
+

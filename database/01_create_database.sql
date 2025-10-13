@@ -93,7 +93,7 @@ CREATE TABLE users (
     
     -- Constraints
     CONSTRAINT chk_email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
-    CONSTRAINT chk_phone_format CHECK (phone_number IS NULL OR phone_number ~* '^\+?[1-9]\d{1,14}$'),
+    CONSTRAINT chk_phone_format CHECK (phone_number IS NULL OR phone_number ~* '^(\+44|0)[0-9]{10,11}$'),
     CONSTRAINT chk_name_length CHECK (LENGTH(name) >= 2 AND LENGTH(name) <= 100),
     CONSTRAINT chk_linkedin_url CHECK (linkedin_url IS NULL OR linkedin_url ~* '^https://linkedin\.com/in/'),
     CONSTRAINT chk_github_url CHECK (github_url IS NULL OR github_url ~* '^https://github\.com/')

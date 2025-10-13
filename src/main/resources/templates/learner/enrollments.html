@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>My Enrollments - ETMS</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            <i class="fas fa-book-reader mr-2"></i>My Enrollments
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400">
+            Track all your enrolled courses and progress
+        </p>
+    </div>
+    
+    <!-- Filter Tabs -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-8">
+        <div class="flex border-b border-gray-200 dark:border-gray-700">
+            <button onclick="filterEnrollments('all')" 
+                    class="enroll-filter-tab active px-6 py-4 font-semibold border-b-2 transition">
+                All (<span th:text="${#lists.size(enrollments)}">5</span>)
+            </button>
+            <button onclick="filterEnrollments('ACTIVE')" 
+                    class="enroll-filter-tab px-6 py-4 font-semibold border-b-2 border-transparent transition">
+                Active (<span th:text="${#lists.size(#lists.filter(enrollments, e -> e.status.name() == 'ACTIVE'))}">3</span>)
+            </button>
+            <button onclick="filterEnrollments('COMPLETED')" 
+                    class="enroll-filter-tab px-6 py-4 font-semibold border-b-2 border-transparent transition">
+                Completed (<span th:text="${#lists.size(#lists.filter(enrollments, e -> e.status.name() == 'COMPLETED'))}">2</span>)
+            </button>
+        </div>
+    </div>
+    
+    <!-- Enrollments Grid -->
+    <div th:if="${enrollments != null and !enrollments.empty}" 
+         class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div th:each="enrollment : ${enrollments}" 
+             th:attr="data-enrollment-status=${enrollment.status}"
+             class="enrollment-card bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition overflow-hidden">
+            <!-- Course Thumbnail -->
+            <div class="h-48 bg-gradient-to-r from-primary-500 to-primary-700 flex items-center justify-center relative">
+                <i th:if="${enrollment.courseThumbnailUrl == null}" 
+                   class="fas fa-book text-white text-6xl"></i>
+                <img th:if="${enrollment.courseThumbnailUrl != null}" 
+                     th:src="${enrollment.courseThumbnailUrl}" 
+                     th:alt="${enrollment.courseTitle}"
+                     class="w-full h-full object-cover">
+                
+                <!-- Status Badge -->
+                <div class="absolute top-4 right-4">
+                    <span th:class="${enrollment.status.name() == 'ACTIVE' ? 'bg-green-500' : 
+                                     enrollment.status.name() == 'COMPLETED' ? 'bg-blue-500' : 
+                                     enrollment.status.name() == 'CANCELLED' ? 'bg-red-500' : 'bg-gray-500'}"
+                          class="px-3 py-1 text-white text-sm font-semibold rounded-full">
+                        <span th:text="${enrollment.status}">ACTIVE</span>
+                    </span>
+                </div>
+                
+                <!-- Certificate Badge -->
+                <div th:if="${enrollment.certificateIssued}" class="absolute top-4 left-4">
+                    <span class="px-3 py-1 bg-yellow-500 text-white text-sm font-semibold rounded-full">
+                        <i class="fas fa-certificate mr-1"></i>Certified
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Course Content -->
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 line-clamp-2">
+                    <a th:href="@{/learner/enrollments/{id}(id=${enrollment.id})}" 
+                       th:text="${enrollment.courseTitle}"
+                       class="hover:text-primary-600 dark:hover:text-primary-400">
+                        Java Spring Boot Fundamentals
+                    </a>
+                </h3>
+                
+                <!-- Progress Section -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Overall Progress</span>
+                        <span class="text-sm font-bold text-primary-600 dark:text-primary-400" 
+                              th:text="${enrollment.progressPercent != null ? #numbers.formatDecimal(enrollment.progressPercent, 1, 0) + '%' : '0%'}">
+                            75%
+                        </span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                        <div class="bg-primary-600 dark:bg-primary-500 h-3 rounded-full progress-bar-fill" 
+                             th:style="'width: ' + ${enrollment.progressPercent ?: 0} + '%'"></div>
+                    </div>
+                </div>
+                
+                <!-- Materials Progress -->
+                <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                        <p class="text-gray-600 dark:text-gray-400 mb-1">Materials</p>
+                        <p class="font-semibold text-gray-900 dark:text-white">
+                            <span th:text="${enrollment.completedMaterials ?: 0}">5</span> / 
+                            <span th:text="${enrollment.totalMaterials ?: 0}">10</span>
+                        </p>
+                    </div>
+                    
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                        <p class="text-gray-600 dark:text-gray-400 mb-1">Time Spent</p>
+                        <p class="font-semibold text-gray-900 dark:text-white">
+                            <span th:text="${enrollment.timeSpentMinutes != null ? (enrollment.timeSpentMinutes / 60) : 0}">5</span>h
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Enrollment Dates -->
+                <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                    <p>Enrolled: <span th:text="${#temporals.format(enrollment.enrolledAt, 'MMM dd, yyyy')}">Oct 10, 2025</span></p>
+                    <p th:if="${enrollment.lastAccessed != null}">
+                        Last accessed: <span th:text="${#temporals.format(enrollment.lastAccessed, 'MMM dd, yyyy')}">Oct 12, 2025</span>
+                    </p>
+                    <p th:if="${enrollment.completionDate != null}" class="text-green-600 dark:text-green-400">
+                        Completed: <span th:text="${#temporals.format(enrollment.completionDate, 'MMM dd, yyyy')}">Oct 15, 2025</span>
+                    </p>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex gap-2">
+                    <a th:href="@{/learner/enrollments/{id}(id=${enrollment.id})}" 
+                       class="flex-1 py-2 px-4 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white text-center font-semibold rounded-lg transition">
+                        <i th:class="${enrollment.status.name() == 'COMPLETED' ? 'fas fa-eye' : 'fas fa-play'}" class="mr-1"></i>
+                        <span th:text="${enrollment.status.name() == 'COMPLETED' ? 'View' : 'Continue'}">Continue</span>
+                    </a>
+                    
+                    <a th:href="@{/learner/courses/{id}/feedback(id=${enrollment.courseId})}" 
+                       class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition"
+                       title="Rate Course">
+                        <i class="fas fa-star"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Empty State -->
+    <div th:if="${enrollments == null or enrollments.empty}" 
+         class="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <i class="fas fa-inbox text-6xl text-gray-400 mb-4"></i>
+        <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">No Enrollments Yet</h3>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">
+            You haven't enrolled in any courses yet. Start your learning journey today!
+        </p>
+        <a th:href="@{/courses}" 
+           class="inline-block px-6 py-3 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-semibold rounded-lg transition">
+            <i class="fas fa-search mr-2"></i>Browse Courses
+        </a>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        // Enrollment filtering by status
+        function filterEnrollments(status) {
+            const cards = document.querySelectorAll('.enrollment-card');
+            const tabs = document.querySelectorAll('.enroll-filter-tab');
+            
+            // Update tab styles
+            tabs.forEach(tab => {
+                tab.classList.remove('active', 'border-primary-600', 'text-primary-600', 'dark:border-primary-400', 'dark:text-primary-400');
+                tab.classList.add('text-gray-600', 'dark:text-gray-400');
+            });
+            
+            event.target.classList.add('active', 'border-primary-600', 'text-primary-600', 'dark:border-primary-400', 'dark:text-primary-400');
+            event.target.classList.remove('text-gray-600', 'dark:text-gray-400');
+            
+            // Filter cards
+            cards.forEach(card => {
+                if (status === 'all' || card.dataset.enrollmentStatus === status) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        // Initialize first tab as active
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstTab = document.querySelector('.enroll-filter-tab');
+            if (firstTab) {
+                firstTab.classList.add('border-primary-600', 'text-primary-600', 'dark:border-primary-400', 'dark:text-primary-400');
+            }
+        });
+    </script>
+</th:block>
+</body>
+</html>
+
