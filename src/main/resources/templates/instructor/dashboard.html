@@ -38,7 +38,7 @@
                 <div>
                     <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Published</p>
                     <h3 class="text-3xl font-bold text-gray-900 dark:text-white">
-                        <span th:text="${#lists.size(#lists.filter(courses, c -> c.status.name() == 'PUBLISHED'))}">4</span>
+                        <span th:text="${publishedCount}">4</span>
                     </h3>
                 </div>
                 <div class="bg-green-100 dark:bg-green-900 rounded-full p-4">
@@ -53,7 +53,7 @@
                 <div>
                     <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Drafts</p>
                     <h3 class="text-3xl font-bold text-gray-900 dark:text-white">
-                        <span th:text="${#lists.size(#lists.filter(courses, c -> c.status.name() == 'DRAFT'))}">2</span>
+                        <span th:text="${draftCount}">2</span>
                     </h3>
                 </div>
                 <div class="bg-yellow-100 dark:bg-yellow-900 rounded-full p-4">

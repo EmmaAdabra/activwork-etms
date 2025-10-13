@@ -68,8 +68,8 @@
                         
                         <!-- Status -->
                         <td class="px-6 py-4">
-                            <span th:class="${enrollment.status.name() == 'ACTIVE' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' : 
-                                             enrollment.status.name() == 'COMPLETED' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 
+                            <span th:class="${enrollment.status.toString() == 'ACTIVE' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' : 
+                                             enrollment.status.toString() == 'COMPLETED' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 
                                              'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}"
                                   class="px-3 py-1 text-xs font-semibold rounded-full">
                                 <span th:text="${enrollment.status}">ACTIVE</span>

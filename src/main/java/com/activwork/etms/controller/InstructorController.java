@@ -74,9 +74,20 @@ public class InstructorController {
         // Get instructor's courses
         List<CourseResponseDto> courses = courseService.getCoursesByInstructor(user.getId());
         
+        // Calculate course counts by status
+        long publishedCount = courses.stream()
+                .filter(course -> course.getStatus() == com.activwork.etms.model.CourseStatus.PUBLISHED)
+                .count();
+        
+        long draftCount = courses.stream()
+                .filter(course -> course.getStatus() == com.activwork.etms.model.CourseStatus.DRAFT)
+                .count();
+        
         model.addAttribute("user", user);
         model.addAttribute("courses", courses);
         model.addAttribute("totalCourses", courses.size());
+        model.addAttribute("publishedCount", publishedCount);
+        model.addAttribute("draftCount", draftCount);
         
         return "instructor/dashboard";
     }
@@ -96,7 +107,23 @@ public class InstructorController {
         var user = userDetailsService.getUserByEmail(userDetails.getUsername());
         List<CourseResponseDto> courses = courseService.getCoursesByInstructor(user.getId());
         
+        // Calculate course counts by status
+        long publishedCount = courses.stream()
+                .filter(course -> course.getStatus() == com.activwork.etms.model.CourseStatus.PUBLISHED)
+                .count();
+        
+        long draftCount = courses.stream()
+                .filter(course -> course.getStatus() == com.activwork.etms.model.CourseStatus.DRAFT)
+                .count();
+        
+        long archivedCount = courses.stream()
+                .filter(course -> course.getStatus() == com.activwork.etms.model.CourseStatus.ARCHIVED)
+                .count();
+        
         model.addAttribute("courses", courses);
+        model.addAttribute("publishedCount", publishedCount);
+        model.addAttribute("draftCount", draftCount);
+        model.addAttribute("archivedCount", archivedCount);
         
         return "instructor/courses";
     }

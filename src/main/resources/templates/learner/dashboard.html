@@ -52,7 +52,7 @@
                 <div>
                     <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Completed</p>
                     <h3 class="text-3xl font-bold text-gray-900 dark:text-white">
-                        <span th:text="${#lists.size(#lists.filter(activeEnrollments, e -> e.status.name() == 'COMPLETED'))}">1</span>
+                        <span th:text="${#lists.size(#lists.filter(activeEnrollments, e -> e.status.toString() == 'COMPLETED'))}">1</span>
                     </h3>
                 </div>
                 <div class="bg-blue-100 dark:bg-blue-900 rounded-full p-4">
@@ -116,8 +116,8 @@
                     
                     <!-- Status Badge -->
                     <div class="absolute top-4 right-4">
-                        <span th:class="${enrollment.status.name() == 'ACTIVE' ? 'bg-green-500' : 
-                                         enrollment.status.name() == 'COMPLETED' ? 'bg-blue-500' : 'bg-gray-500'}"
+                        <span th:class="${enrollment.status.toString() == 'ACTIVE' ? 'bg-green-500' : 
+                                         enrollment.status.toString() == 'COMPLETED' ? 'bg-blue-500' : 'bg-gray-500'}"
                               class="px-3 py-1 text-white text-sm font-semibold rounded-full">
                             <span th:text="${enrollment.status}">ACTIVE</span>
                         </span>

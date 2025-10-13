@@ -24,10 +24,10 @@
                 
                 <!-- Status Badge -->
                 <div class="inline-flex items-center gap-2 mb-4">
-                    <span th:class="${enrollment.status.name() == 'ACTIVE' ? 'bg-green-500' : 
-                                     enrollment.status.name() == 'COMPLETED' ? 'bg-blue-500' : 'bg-gray-500'}"
+                    <span th:class="${enrollment.status.toString() == 'ACTIVE' ? 'bg-green-500' : 
+                                     enrollment.status.toString() == 'COMPLETED' ? 'bg-blue-500' : 'bg-gray-500'}"
                           class="px-3 py-1 text-white text-sm font-semibold rounded-full">
-                        <i th:class="${enrollment.status.name() == 'COMPLETED' ? 'fas fa-check-circle' : 'fas fa-clock'}" class="mr-1"></i>
+                        <i th:class="${enrollment.status.toString() == 'COMPLETED' ? 'fas fa-check-circle' : 'fas fa-clock'}" class="mr-1"></i>
                         <span th:text="${enrollment.status}">ACTIVE</span>
                     </span>
                     
@@ -107,7 +107,7 @@
             <i class="fas fa-download mr-2"></i>Download Certificate
         </a>
         
-        <form th:if="${enrollment.status.name() == 'ACTIVE'}"
+        <form th:if="${enrollment.status.toString() == 'ACTIVE'}"
               th:action="@{/learner/enrollments/{id}/cancel(id=${enrollment.id})}" 
               method="post"
               onsubmit="return confirm('Are you sure you want to cancel this enrollment?')">

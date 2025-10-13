@@ -140,9 +140,9 @@
                 
                 <!-- Difficulty Badge -->
                 <div class="absolute top-3 right-3">
-                    <span th:class="${course.difficultyLevel == T(com.activwork.etms.model.DifficultyLevel).BEGINNER ? 'bg-green-500' : 
-                                     course.difficultyLevel == T(com.activwork.etms.model.DifficultyLevel).INTERMEDIATE ? 'bg-yellow-500' : 
-                                     course.difficultyLevel == T(com.activwork.etms.model.DifficultyLevel).ADVANCED ? 'bg-orange-500' : 'bg-red-500'}"
+                    <span th:class="${course.difficultyLevel.toString() == 'BEGINNER' ? 'bg-green-500' : 
+                                     course.difficultyLevel.toString() == 'INTERMEDIATE' ? 'bg-yellow-500' : 
+                                     course.difficultyLevel.toString() == 'ADVANCED' ? 'bg-orange-500' : 'bg-red-500'}"
                           class="px-3 py-1 text-white text-xs font-semibold rounded-full">
                         <span th:text="${course.difficultyLevel}">INTERMEDIATE</span>
                     </span>
