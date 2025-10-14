@@ -179,6 +179,36 @@ public class LearnerController {
         
         return "learner/enrollment-details";
     }
+    
+    /**
+     * Get enrollment progress as JSON (for AJAX updates).
+     * 
+     * @param id the enrollment UUID
+     * @param userDetails the authenticated user
+     * @return enrollment data as JSON
+     */
+    @GetMapping("/enrollments/{id}/progress")
+    @ResponseBody
+    public ResponseEntity<EnrollmentResponseDto> getEnrollmentProgress(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            EnrollmentResponseDto enrollment = enrollmentService.getEnrollmentById(id);
+            
+            // Verify user owns this enrollment
+            if (!enrollment.getLearnerId().equals(user.getId())) {
+                return ResponseEntity.status(403).build();
+            }
+            
+            return ResponseEntity.ok(enrollment);
+            
+        } catch (Exception e) {
+            log.error("Failed to fetch enrollment progress", e);
+            return ResponseEntity.notFound().build();
+        }
+    }
 
     /**
      * Cancel enrollment.
@@ -334,6 +364,12 @@ public class LearnerController {
                 return ResponseEntity.status(403).build();
             }
             
+            // PREVENT video downloads
+            if ("VIDEO".equals(material.getMaterialType().toString())) {
+                log.warn("Attempt to download video material blocked: {}", id);
+                return ResponseEntity.status(403).build();
+            }
+            
             // Check if material is downloadable
             if (!material.getIsDownloadable()) {
                 return ResponseEntity.status(403).build();
@@ -360,6 +396,78 @@ public class LearnerController {
         } catch (Exception e) {
             log.error("Error downloading material: {}", id, e);
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Get material progress for a learner.
+     * 
+     * @param materialId the material UUID
+     * @param userDetails the authenticated user
+     * @return material progress data
+     */
+    @GetMapping("/materials/{id}/progress")
+    public ResponseEntity<MaterialProgressDto> getMaterialProgress(
+            @PathVariable("id") UUID materialId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            MaterialResponseDto material = materialService.getMaterialById(materialId);
+            
+            // Verify user is enrolled in the course
+            boolean isEnrolled = enrollmentService.isLearnerEnrolled(user.getId(), material.getCourseId());
+            if (!isEnrolled) {
+                return ResponseEntity.status(403).build();
+            }
+            
+            // Get or create material progress
+            MaterialProgressDto progress = materialService.getOrCreateMaterialProgress(
+                enrollmentService.getEnrollmentByLearnerAndCourse(user.getId(), material.getCourseId()).getId(),
+                materialId
+            );
+            
+            return ResponseEntity.ok(progress);
+            
+        } catch (Exception e) {
+            log.error("Error getting material progress: {}", materialId, e);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Update material progress for a learner.
+     * 
+     * @param progressDto the progress data
+     * @param userDetails the authenticated user
+     * @return updated progress data
+     */
+    @PostMapping("/materials/progress")
+    public ResponseEntity<MaterialProgressDto> updateMaterialProgress(
+            @RequestBody MaterialProgressUpdateDto progressDto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            MaterialResponseDto material = materialService.getMaterialById(progressDto.getMaterialId());
+            
+            // Verify user is enrolled in the course
+            boolean isEnrolled = enrollmentService.isLearnerEnrolled(user.getId(), material.getCourseId());
+            if (!isEnrolled) {
+                return ResponseEntity.status(403).build();
+            }
+            
+            // Update material progress
+            MaterialProgressDto updatedProgress = materialService.updateMaterialProgress(
+                enrollmentService.getEnrollmentByLearnerAndCourse(user.getId(), material.getCourseId()).getId(),
+                progressDto
+            );
+            
+            return ResponseEntity.ok(updatedProgress);
+            
+        } catch (Exception e) {
+            log.error("Error updating material progress", e);
+            return ResponseEntity.badRequest().build();
         }
     }
 }

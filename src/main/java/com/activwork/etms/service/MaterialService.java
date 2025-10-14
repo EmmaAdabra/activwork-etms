@@ -1,13 +1,19 @@
 package com.activwork.etms.service;
 
 import com.activwork.etms.dto.MaterialResponseDto;
+import com.activwork.etms.dto.MaterialProgressDto;
+import com.activwork.etms.dto.MaterialProgressUpdateDto;
 import com.activwork.etms.exception.FileStorageException;
 import com.activwork.etms.exception.ResourceNotFoundException;
 import com.activwork.etms.model.Course;
+import com.activwork.etms.model.Enrollment;
 import com.activwork.etms.model.Material;
+import com.activwork.etms.model.MaterialProgress;
 import com.activwork.etms.model.MaterialType;
 import com.activwork.etms.repository.CourseRepository;
 import com.activwork.etms.repository.MaterialRepository;
+import com.activwork.etms.repository.MaterialProgressRepository;
+import com.activwork.etms.service.EnrollmentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -40,7 +47,9 @@ public class MaterialService {
 
     private final MaterialRepository materialRepository;
     private final CourseRepository courseRepository;
+    private final MaterialProgressRepository materialProgressRepository;
     private final FileStorageService fileStorageService;
+    private final EnrollmentService enrollmentService;
 
     /**
      * Get all materials for a course (ordered by display order).
@@ -279,6 +288,141 @@ public class MaterialService {
         
         // Default to document
         return MaterialType.DOCUMENT;
+    }
+
+    /**
+     * Get or create material progress for a learner.
+     * 
+     * @param enrollmentId the enrollment UUID
+     * @param materialId the material UUID
+     * @return material progress data
+     */
+    public MaterialProgressDto getOrCreateMaterialProgress(UUID enrollmentId, UUID materialId) {
+        // First try to find existing progress
+        Optional<MaterialProgress> existingProgress = materialProgressRepository
+                .findByEnrollmentIdAndMaterialId(enrollmentId, materialId);
+        
+        if (existingProgress.isPresent()) {
+            return MaterialProgressDto.fromEntity(existingProgress.get());
+        }
+        
+        // Create new progress if doesn't exist
+        MaterialProgress newProgress = new MaterialProgress();
+        
+        // Set enrollment and material objects
+        Enrollment enrollment = new Enrollment();
+        enrollment.setId(enrollmentId);
+        newProgress.setEnrollment(enrollment);
+        
+        Material material = new Material();
+        material.setId(materialId);
+        newProgress.setMaterial(material);
+        
+        newProgress.setIsCompleted(false);
+        newProgress.setCompletionPercent(java.math.BigDecimal.ZERO);
+        newProgress.setTimeSpentMinutes(0);
+        newProgress.setLastPositionSeconds(0);
+            // newProgress.setSuspiciousActivity(false);
+        
+        MaterialProgress savedProgress = materialProgressRepository.save(newProgress);
+        return MaterialProgressDto.fromEntity(savedProgress);
+    }
+
+    /**
+     * Update material progress for a learner.
+     * 
+     * @param enrollmentId the enrollment UUID
+     * @param progressDto the progress update data
+     * @return updated progress data
+     */
+    @Transactional
+    public MaterialProgressDto updateMaterialProgress(UUID enrollmentId, MaterialProgressUpdateDto progressDto) {
+        MaterialProgress progress = materialProgressRepository
+                .findByEnrollmentIdAndMaterialId(enrollmentId, progressDto.getMaterialId())
+                .orElseGet(() -> {
+                    MaterialProgress newProgress = new MaterialProgress();
+                    
+                    // Set enrollment and material objects
+                    Enrollment enrollment = new Enrollment();
+                    enrollment.setId(enrollmentId);
+                    newProgress.setEnrollment(enrollment);
+                    
+                    Material material = new Material();
+                    material.setId(progressDto.getMaterialId());
+                    newProgress.setMaterial(material);
+                    
+                    return newProgress;
+                });
+        
+        // Update progress data
+        if (progressDto.getLastPositionSeconds() != null) {
+            progress.setLastPositionSeconds(progressDto.getLastPositionSeconds());
+        }
+        if (progressDto.getCompletionPercent() != null) {
+            progress.setCompletionPercent(java.math.BigDecimal.valueOf(progressDto.getCompletionPercent()));
+        }
+        if (progressDto.getTimeSpentMinutes() != null) {
+            progress.setTimeSpentMinutes(progressDto.getTimeSpentMinutes());
+        }
+        if (progressDto.getIsCompleted() != null) {
+            progress.setIsCompleted(progressDto.getIsCompleted());
+            if (progressDto.getIsCompleted()) {
+                progress.setCompletedAt(java.time.ZonedDateTime.now());
+                log.info("✓ Material COMPLETED - Enrollment: {}, Material: {}", enrollmentId, progressDto.getMaterialId());
+            }
+        }
+            // if (progressDto.getSuspiciousActivity() != null) {
+            //     progress.setSuspiciousActivity(progressDto.getSuspiciousActivity());
+            // }
+        
+        MaterialProgress savedProgress = materialProgressRepository.save(progress);
+        
+        log.info("Material progress updated for enrollment: {}, material: {}, isCompleted: {}", 
+                enrollmentId, progressDto.getMaterialId(), progressDto.getIsCompleted());
+        
+        // Update course progress if material was completed
+        if (progressDto.getIsCompleted() != null && progressDto.getIsCompleted()) {
+            log.info("▶ Triggering course progress update for enrollment: {}", enrollmentId);
+            updateCourseProgress(enrollmentId);
+        }
+        
+        return MaterialProgressDto.fromEntity(savedProgress);
+    }
+    
+    /**
+     * Update course progress based on completed materials.
+     * 
+     * @param enrollmentId the enrollment UUID
+     */
+    @Transactional
+    public void updateCourseProgress(UUID enrollmentId) {
+        try {
+            // Get enrollment
+            var enrollment = enrollmentService.getEnrollmentById(enrollmentId);
+            
+            // Count completed materials for this enrollment
+            long completedMaterials = materialProgressRepository.countByEnrollmentIdAndIsCompleted(enrollmentId, true);
+            
+            // Count total materials for this course
+            long totalMaterials = materialRepository.countByCourseIdAndIsActive(enrollment.getCourseId(), true);
+            
+            // Calculate progress percentage
+            double progressPercent = totalMaterials > 0 ? (double) completedMaterials / totalMaterials * 100 : 0;
+            
+            // Update enrollment progress WITH material counts
+            enrollmentService.updateProgress(
+                enrollmentId, 
+                java.math.BigDecimal.valueOf(progressPercent),
+                (int) completedMaterials,
+                (int) totalMaterials
+            );
+            
+            log.info("📊 Course progress updated for enrollment {}: {}/{} materials completed ({}%)", 
+                    enrollmentId, completedMaterials, totalMaterials, Math.round(progressPercent));
+                    
+        } catch (Exception e) {
+            log.error("❌ Failed to update course progress for enrollment: {}", enrollmentId, e);
+        }
     }
 }
 

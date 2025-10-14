@@ -210,11 +210,6 @@
                                         <span th:text="${material.viewCount}">0</span> views
                                     </span>
                                     
-                                    <span class="flex items-center" th:if="${material.isDownloadable}">
-                                        <i class="fas fa-download mr-1"></i>
-                                        <span th:text="${material.downloadCount}">0</span> downloads
-                                    </span>
-                                    
                                     <span class="flex items-center">
                                         <i class="fas fa-calendar mr-1"></i>
                                         <span th:text="${#temporals.format(material.uploadedAt, 'MMM dd, yyyy')}">Oct 10, 2025</span>
@@ -225,21 +220,23 @@
                         
                         <!-- Action Buttons -->
                         <div class="flex items-center space-x-2">
-                            <!-- View/Download Button -->
-                            <a th:href="@{/learner/materials/{id}/view(id=${material.id})}" 
-                               class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
-                                <i th:if="${material.materialType.toString() == 'VIDEO'}" class="fas fa-play mr-1"></i>
-                                <i th:if="${material.materialType.toString() != 'VIDEO'}" class="fas fa-eye mr-1"></i>
-                                <span th:if="${material.materialType.toString() == 'VIDEO'}">Watch</span>
-                                <span th:if="${material.materialType.toString() != 'VIDEO'}">View</span>
-                            </a>
+                            <!-- Video Player Toggle Button -->
+                            <button th:if="${material.materialType.toString() == 'VIDEO'}" 
+                                    th:data-material-id="${material.id}"
+                                    onclick="toggleVideoPlayer(this.dataset.materialId)"
+                                    class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                                <i class="fas fa-play mr-1"></i>
+                                <span>Watch Video</span>
+                            </button>
                             
-                            <!-- Download Button (if downloadable) -->
-                            <a th:if="${material.isDownloadable}" 
-                               th:href="@{/learner/materials/{id}/download(id=${material.id})}" 
-                               class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition">
-                                <i class="fas fa-download mr-1"></i>
-                                Download
+                            <!-- View Button for non-video materials (opens in new tab) -->
+                            <a th:if="${material.materialType.toString() != 'VIDEO'}" 
+                               th:href="@{/learner/materials/{id}/view(id=${material.id})}" 
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                                <i class="fas fa-external-link-alt mr-1"></i>
+                                <span>Open</span>
                             </a>
                         </div>
                     </div>
@@ -247,6 +244,782 @@
             </div>
         </div>
     </div>
+    
+    <!-- Video Player Modal -->
+    <div id="videoPlayerModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full">
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <h3 id="videoTitle" class="text-lg font-semibold text-gray-900 dark:text-white">
+                            Video Player
+                        </h3>
+                        <button onclick="closeVideoPlayer()" 
+                                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="p-4">
+                    <!-- Video Player -->
+                    <div class="relative">
+                        <video id="videoPlayer" 
+                               controls 
+                               controlslist="nodownload"
+                               disablepictureinpicture
+                               width="100%" 
+                               class="rounded-lg"
+                               ontimeupdate="updateVideoProgress()"
+                               onended="onVideoEnded()"
+                               onseeking="onVideoSeeking()"
+                               onseeked="onVideoSeeked()"
+                               onpause="onVideoPause()"
+                               onplay="onVideoPlay()"
+                               oncontextmenu="return false;">
+                            Your browser does not support the video tag.
+                        </video>
+                        
+                        <!-- Progress Bar -->
+                        <div class="mt-4">
+                            <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                <span>Progress: <span id="progressText">0%</span></span>
+                                <span>Time: <span id="timeText">0:00 / 0:00</span></span>
+                                <span id="skipCounter" class="text-xs">
+                                    <i class="fas fa-forward mr-1"></i>
+                                    Skips: <span id="skipCount">0</span>/3
+                                </span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                <div id="progressBar" class="bg-primary-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Anti-cheating warnings -->
+                        <div id="warningMessage" class="hidden mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400 mr-2"></i>
+                                <span class="text-yellow-800 dark:text-yellow-200 text-sm">
+                                    <span id="warningText">Please watch the video properly to mark it as completed.</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// Video tracking variables
+let currentMaterialId = null;
+let videoProgress = {
+    lastPosition: 0,
+    seekCount: 0,
+    totalSeekTime: 0,
+    watchTime: 0,
+    startTime: null,
+    isPaused: false,
+    suspiciousActivity: false,
+    isCompleted: false,  // Track completion explicitly
+    lastUpdateTime: null,  // Track last update for accurate time calculation
+    toastShown: false  // Prevent duplicate toast notifications
+};
+
+// Initialize video player
+function toggleVideoPlayer(materialId) {
+    console.log('🎬 Opening video player for material:', materialId);
+    currentMaterialId = materialId;
+    const video = document.getElementById('videoPlayer');
+    const modal = document.getElementById('videoPlayerModal');
+    const videoTitle = document.getElementById('videoTitle');
+    
+    // Set video source
+    video.src = `/learner/materials/${materialId}/view`;
+    videoTitle.textContent = 'Loading video...';
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    
+    // Reset progress tracking
+    resetVideoProgress();
+    
+    // Load material progress from server
+    loadMaterialProgress(materialId);
+    
+    // Add error handler
+    video.onerror = function(e) {
+        // Only show error if it's not during close/cleanup
+        if (currentMaterialId) {
+            console.error('❌ Video load error:', e);
+            showError('Failed to load video. Please try again.');
+        }
+    };
+    
+    // Add loaded handler
+    video.onloadeddata = function() {
+        console.log('✅ Video loaded successfully - Duration:', Math.round(video.duration), 'seconds');
+        videoTitle.textContent = 'Video Player';
+        
+        // Show helpful message about completion requirements
+        const infoMessage = document.createElement('div');
+        infoMessage.className = 'mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg';
+        infoMessage.innerHTML = `
+            <div class="flex items-start">
+                <i class="fas fa-info-circle text-blue-600 dark:text-blue-400 mr-2 mt-1"></i>
+                <div class="text-blue-800 dark:text-blue-200 text-sm">
+                    <p class="font-semibold mb-1">To complete this video:</p>
+                    <ul class="list-disc list-inside space-y-1 ml-2">
+                        <li>Watch at least 30% of the video content</li>
+                        <li>Avoid excessive skipping (max 3 skips allowed)</li>
+                        <li>Your progress is saved automatically</li>
+                    </ul>
+                </div>
+            </div>
+        `;
+        
+        // Insert after progress bar
+        const progressContainer = document.querySelector('#videoPlayerModal .relative');
+        if (progressContainer && !document.querySelector('.video-info-message')) {
+            infoMessage.classList.add('video-info-message');
+            progressContainer.appendChild(infoMessage);
+            
+            // Remove after 10 seconds
+            setTimeout(() => {
+                infoMessage.remove();
+            }, 10000);
+        }
+    };
+    
+    // Debug: Log when video starts playing
+    video.onloadedmetadata = function() {
+        console.log('📊 Video metadata loaded - Duration:', Math.round(video.duration), 'seconds');
+    };
+}
+
+// Close video player
+function closeVideoPlayer() {
+    const modal = document.getElementById('videoPlayerModal');
+    const video = document.getElementById('videoPlayer');
+    
+    // Save progress before closing (only if video was actually playing)
+    if (currentMaterialId && video.duration && !isNaN(video.duration)) {
+        saveVideoProgress();
+    }
+    
+    // Remove error handler to prevent error on close
+    video.onerror = null;
+    
+    // Pause and reset
+    video.pause();
+    video.removeAttribute('src'); // Remove the source
+    video.load(); // Reset video element
+    
+    // Hide modal
+    modal.classList.add('hidden');
+    currentMaterialId = null;
+    resetVideoProgress();
+}
+
+// Reset video progress tracking
+function resetVideoProgress() {
+    videoProgress = {
+        lastPosition: 0,
+        seekCount: 0,
+        totalSeekTime: 0,
+        watchTime: 0,
+        startTime: null,
+        isPaused: false,
+        suspiciousActivity: false,
+        isCompleted: false,
+        lastUpdateTime: null,  // Track last update for accurate time calculation
+        toastShown: false  // Reset toast flag
+    };
+    updateProgressDisplay();
+}
+
+// Load material progress from server
+async function loadMaterialProgress(materialId) {
+    try {
+        const response = await fetch(`/learner/materials/${materialId}/progress`);
+        if (response.ok) {
+            const progress = await response.json();
+            videoProgress.lastPosition = progress.lastPositionSeconds || 0;
+            
+            // Check if video was already completed
+            if (progress.isCompleted) {
+                videoProgress.isCompleted = true;
+                console.log('✅ This video was previously completed - Free navigation enabled');
+                
+                // Show info message
+                showSuccess('✅ Video already completed! You can navigate freely.');
+                
+                // Add completed badge to video title
+                const videoTitle = document.getElementById('videoTitle');
+                if (videoTitle && !videoTitle.querySelector('.completed-badge')) {
+                    const badge = document.createElement('span');
+                    badge.className = 'completed-badge ml-3 px-3 py-1 bg-green-500 text-white text-sm rounded-full';
+                    badge.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Completed';
+                    videoTitle.appendChild(badge);
+                }
+                
+                // Hide skip counter (not needed for completed videos)
+                const skipCounter = document.getElementById('skipCounter');
+                if (skipCounter) {
+                    skipCounter.style.display = 'none';
+                }
+            }
+            
+            // Set video to last position
+            const video = document.getElementById('videoPlayer');
+            video.addEventListener('loadedmetadata', function() {
+                video.currentTime = videoProgress.lastPosition;
+                updateProgressDisplay();
+            });
+        }
+    } catch (error) {
+        console.log('No previous progress found');
+    }
+}
+
+// Update video progress
+function updateVideoProgress() {
+    const video = document.getElementById('videoPlayer');
+    if (!video.duration) return;
+    
+    const currentTime = video.currentTime;
+    const duration = video.duration;
+    const progressPercent = (currentTime / duration) * 100;
+    
+    // Update display
+    document.getElementById('progressText').textContent = Math.round(progressPercent) + '%';
+    document.getElementById('progressBar').style.width = progressPercent + '%';
+    
+    // Update time display
+    const currentMinutes = Math.floor(currentTime / 60);
+    const currentSeconds = Math.floor(currentTime % 60);
+    const durationMinutes = Math.floor(duration / 60);
+    const durationSeconds = Math.floor(duration % 60);
+    
+    document.getElementById('timeText').textContent = 
+        `${currentMinutes}:${currentSeconds.toString().padStart(2, '0')} / ${durationMinutes}:${durationSeconds.toString().padStart(2, '0')}`;
+    
+    // Track watch time more accurately using actual time delta
+    if (!video.paused) {
+        const now = Date.now();
+        if (videoProgress.lastUpdateTime && videoProgress.lastUpdateTime > 0) {
+            const timeDelta = (now - videoProgress.lastUpdateTime) / 1000; // Convert to seconds
+            // Only add time if delta is reasonable (< 2 seconds to filter out pauses/seeks)
+            if (timeDelta > 0 && timeDelta < 2) {
+                videoProgress.watchTime += timeDelta;
+                console.log('⏱️ Tracking: +' + timeDelta.toFixed(2) + 's, Total watch time:', Math.round(videoProgress.watchTime) + 's');
+            }
+        }
+        videoProgress.lastUpdateTime = now;
+    }
+    
+    // Save progress every 30 seconds
+    if (Math.floor(currentTime) % 30 === 0 && Math.floor(currentTime) > 0) {
+        saveVideoProgress();
+    }
+}
+
+// Handle video seeking (anti-cheating)
+function onVideoSeeking() {
+    const video = document.getElementById('videoPlayer');
+    const seekDistance = Math.abs(video.currentTime - videoProgress.lastPosition);
+    
+    // Allow free navigation if video is already completed
+    if (videoProgress.isCompleted) {
+        console.log('✅ Video already completed - Free navigation allowed');
+        return; // Skip all anti-cheating checks
+    }
+    
+    // Detect forward seeking (skipping ahead)
+    if (video.currentTime > videoProgress.lastPosition && seekDistance > 10) {
+        videoProgress.seekCount++;
+        videoProgress.totalSeekTime += seekDistance;
+        
+        console.log('⏩ Forward skip detected:', Math.round(seekDistance), 'seconds (Total skips:', videoProgress.seekCount + ')');
+        
+        // Update skip counter display
+        const skipCountEl = document.getElementById('skipCount');
+        const skipCounterEl = document.getElementById('skipCounter');
+        if (skipCountEl) {
+            // Show "3+" if more than 3 skips
+            skipCountEl.textContent = videoProgress.seekCount > 3 ? '3+' : videoProgress.seekCount;
+            
+            // Change color based on skip count
+            if (videoProgress.seekCount >= 3) {
+                skipCounterEl.className = 'text-xs text-red-600 dark:text-red-400 font-semibold';
+            } else if (videoProgress.seekCount >= 2) {
+                skipCounterEl.className = 'text-xs text-orange-600 dark:text-orange-400 font-semibold';
+            } else {
+                skipCounterEl.className = 'text-xs text-yellow-600 dark:text-yellow-400';
+            }
+        }
+        
+        // Progressive warnings
+        if (videoProgress.seekCount === 1) {
+            showWarning('⚠️ Skipping detected. Watch the full video to get credit.', 'warning');
+        } else if (videoProgress.seekCount === 2) {
+            showWarning('⚠️ Multiple skips detected. This may prevent course completion.', 'warning');
+        } else if (videoProgress.seekCount === 3) {
+            showWarning('🚫 Too many skips! Video will NOT count as completed.', 'error');
+            videoProgress.suspiciousActivity = true;
+        } else if (videoProgress.seekCount >= 4) {
+            // BLOCK further seeking - reset to last valid position
+            video.currentTime = videoProgress.lastPosition;
+            
+            // Show toast notification explaining why seeking is blocked (only once)
+            if (!videoProgress.toastShown) {
+                showToast(
+                    'Fast-Forwarding Restricted', 
+                    'Skipping ahead is disabled to ensure full course participation.',
+                    'error'
+                );
+                videoProgress.toastShown = true;  // Mark toast as shown
+            }
+            
+            return; // Don't update lastPosition since we blocked the seek
+        }
+    }
+}
+
+// Handle video seeked
+function onVideoSeeked() {
+    const video = document.getElementById('videoPlayer');
+    videoProgress.lastPosition = video.currentTime;
+}
+
+// Handle video pause
+function onVideoPause() {
+    videoProgress.isPaused = true;
+    saveVideoProgress();
+}
+
+// Handle video play
+function onVideoPlay() {
+    videoProgress.isPaused = false;
+    videoProgress.lastUpdateTime = Date.now();  // Reset time tracking on play
+    if (!videoProgress.startTime) {
+        videoProgress.startTime = new Date();
+    }
+    console.log('▶️ Video playing - Watch time tracking started');
+}
+
+// Handle video ended
+function onVideoEnded() {
+    const video = document.getElementById('videoPlayer');
+    const duration = video.duration;
+    const watchPercentage = (videoProgress.watchTime / duration) * 100;
+    
+    console.log('🏁 Video ended!');
+    console.log('📊 Watch percentage:', Math.round(watchPercentage) + '%');
+    console.log('⏱️ Watch time:', Math.round(videoProgress.watchTime), 'seconds out of', Math.round(duration), 'seconds');
+    console.log('⏩ Seek count:', videoProgress.seekCount);
+    console.log('🔍 Validating completion...');
+    
+    // Validate completion
+    const isValid = validateVideoCompletion(watchPercentage);
+    console.log('✓ Validation result:', isValid);
+    
+    if (isValid) {
+        videoProgress.isCompleted = true;  // Set completion flag
+        console.log('🎉 Video marked as COMPLETED!');
+        markVideoAsCompleted();
+    } else {
+        showWarning('Please watch more of the video to mark it as completed.');
+        console.log('⚠️ Video not completed - insufficient watch time (need 60-80% minimum)');
+    }
+    
+    // Save progress immediately with completion status
+    console.log('💾 Saving final progress with isCompleted:', videoProgress.isCompleted);
+    saveVideoProgress();
+}
+
+// Validate video completion
+function validateVideoCompletion(watchPercentage) {
+    const seekPenalty = Math.min(videoProgress.seekCount * 5, 20);
+    const requiredPercentage = Math.max(80 - seekPenalty, 60);
+    
+    // TEMPORARY: More lenient validation for testing (30% minimum)
+    const testingRequiredPercentage = 30;  // Changed from 60-80% to 30% for testing
+    
+    console.log('🔍 Validation details:');
+    console.log('   - Watch percentage:', Math.round(watchPercentage) + '%');
+    console.log('   - Seek penalty:', seekPenalty + '%');
+    console.log('   - Required percentage (production):', requiredPercentage + '%');
+    console.log('   - Required percentage (testing):', testingRequiredPercentage + '%');
+    console.log('   - Suspicious activity:', videoProgress.suspiciousActivity);
+    console.log('   - Passes validation:', watchPercentage >= testingRequiredPercentage);
+    
+    // For testing: Only require 30% watch time, ignore suspicious activity
+    return watchPercentage >= testingRequiredPercentage;
+}
+
+// Mark video as completed
+function markVideoAsCompleted() {
+    showSuccess('Video completed! Great job!');
+    
+    // Update progress dynamically without page reload
+    updateEnrollmentProgress();
+}
+
+// Show warning message
+function showWarning(message, severity = 'warning') {
+    const warningDiv = document.getElementById('warningMessage');
+    const warningText = document.getElementById('warningText');
+    warningText.textContent = message;
+    
+    // Update styling based on severity
+    if (severity === 'error') {
+        warningDiv.className = 'mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg';
+        warningDiv.querySelector('.fas').className = 'fas fa-ban text-red-600 dark:text-red-400 mr-2';
+        warningDiv.querySelector('span').className = 'text-red-800 dark:text-red-200 text-sm font-semibold';
+    } else {
+        warningDiv.className = 'mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg';
+        warningDiv.querySelector('.fas').className = 'fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400 mr-2';
+        warningDiv.querySelector('span').className = 'text-yellow-800 dark:text-yellow-200 text-sm';
+    }
+    
+    warningDiv.classList.remove('hidden');
+    
+    // Hide after 5 seconds (longer for errors)
+    const hideDelay = severity === 'error' ? 8000 : 5000;
+    setTimeout(() => {
+        warningDiv.classList.add('hidden');
+    }, hideDelay);
+}
+
+// Show success message
+function showSuccess(message) {
+    console.log(message);
+    
+    // Create success notification
+    const successDiv = document.createElement('div');
+    successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in';
+    successDiv.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas fa-check-circle text-2xl mr-3"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(successDiv);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        successDiv.remove();
+    }, 3000);
+}
+
+// Show error message
+function showError(message) {
+    console.error(message);
+    
+    // Create error notification
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in';
+    errorDiv.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-circle text-2xl mr-3"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(errorDiv);
+    
+    // Remove after 5 seconds
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 5000);
+}
+
+// Show toast notification (for more detailed messages)
+function showToast(title, message, type = 'info') {
+    console.log(`[${type.toUpperCase()}]`, title, '-', message);
+    
+    // Determine styling based on type
+    let bgColor, iconClass, icon;
+    if (type === 'error') {
+        bgColor = 'bg-red-600';
+        iconClass = 'fas fa-ban';
+        icon = '🚫';
+    } else if (type === 'warning') {
+        bgColor = 'bg-yellow-600';
+        iconClass = 'fas fa-exclamation-triangle';
+        icon = '⚠️';
+    } else if (type === 'success') {
+        bgColor = 'bg-green-600';
+        iconClass = 'fas fa-check-circle';
+        icon = '✅';
+    } else {
+        bgColor = 'bg-blue-600';
+        iconClass = 'fas fa-info-circle';
+        icon = 'ℹ️';
+    }
+    
+    // Create toast notification
+    const toastDiv = document.createElement('div');
+    toastDiv.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-5 rounded-lg shadow-2xl z-50 max-w-md animate-fade-in border-l-4 border-white`;
+    toastDiv.innerHTML = `
+        <div class="flex items-start">
+            <i class="${iconClass} text-3xl mr-4 mt-1"></i>
+            <div class="flex-1">
+                <h3 class="font-bold text-lg mb-1">${title}</h3>
+                <p class="text-sm text-white/90">${message}</p>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white/80 hover:text-white">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(toastDiv);
+    
+    // Remove after 10 seconds (longer for important messages)
+    setTimeout(() => {
+        if (toastDiv.parentElement) {
+            toastDiv.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+            setTimeout(() => toastDiv.remove(), 500);
+        }
+    }, 10000);
+}
+
+// Show toast notification with action button
+function showToastWithAction(title, message, type = 'info', actionLabel, actionCallback) {
+    console.log(`[${type.toUpperCase()}]`, title, '-', message);
+    
+    // Determine styling based on type
+    let bgColor, iconClass;
+    if (type === 'error') {
+        bgColor = 'bg-red-600';
+        iconClass = 'fas fa-ban';
+    } else if (type === 'warning') {
+        bgColor = 'bg-yellow-600';
+        iconClass = 'fas fa-exclamation-triangle';
+    } else if (type === 'success') {
+        bgColor = 'bg-green-600';
+        iconClass = 'fas fa-check-circle';
+    } else {
+        bgColor = 'bg-blue-600';
+        iconClass = 'fas fa-info-circle';
+    }
+    
+    // Create toast notification
+    const toastDiv = document.createElement('div');
+    toastDiv.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-5 rounded-lg shadow-2xl z-50 max-w-md animate-fade-in border-l-4 border-white`;
+    toastDiv.innerHTML = `
+        <div>
+            <div class="flex items-start mb-3">
+                <i class="${iconClass} text-3xl mr-4 mt-1"></i>
+                <div class="flex-1">
+                    <h3 class="font-bold text-lg mb-1">${title}</h3>
+                    <p class="text-sm text-white/90">${message}</p>
+                </div>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" class="ml-4 text-white/80 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="flex justify-end">
+                <button id="toastActionBtn" class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white font-semibold rounded transition">
+                    <i class="fas fa-redo mr-2"></i>${actionLabel}
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(toastDiv);
+    
+    // Attach action callback
+    const actionBtn = toastDiv.querySelector('#toastActionBtn');
+    if (actionBtn && actionCallback) {
+        actionBtn.addEventListener('click', function() {
+            actionCallback();
+            toastDiv.remove();
+        });
+    }
+    
+    // Don't auto-remove (let user dismiss or take action)
+}
+
+// Restart video from beginning
+function restartVideo() {
+    const video = document.getElementById('videoPlayer');
+    video.currentTime = 0;
+    resetVideoProgress();
+    video.play();
+    
+    showSuccess('Video restarted. Watch carefully to get completion credit!');
+    console.log('🔄 Video restarted - Progress reset');
+}
+
+// Update progress display
+function updateProgressDisplay() {
+    const video = document.getElementById('videoPlayer');
+    if (!video.duration) return;
+    
+    const progressPercent = (videoProgress.lastPosition / video.duration) * 100;
+    document.getElementById('progressText').textContent = Math.round(progressPercent) + '%';
+    document.getElementById('progressBar').style.width = progressPercent + '%';
+}
+
+// Save video progress to server
+async function saveVideoProgress() {
+    if (!currentMaterialId) return;
+    
+    const video = document.getElementById('videoPlayer');
+    
+    // Don't save if video hasn't loaded or duration is invalid
+    if (!video.duration || isNaN(video.duration) || video.duration === 0) {
+        console.log('Video not loaded properly, skipping progress save');
+        return;
+    }
+    
+    // Don't save if current time is invalid
+    if (isNaN(video.currentTime)) {
+        console.log('Invalid video time, skipping progress save');
+        return;
+    }
+    
+    const progressData = {
+        materialId: currentMaterialId,
+        lastPositionSeconds: Math.floor(video.currentTime),
+        completionPercent: video.duration ? (video.currentTime / video.duration) * 100 : 0,
+        timeSpentMinutes: Math.floor(videoProgress.watchTime / 60),
+        isCompleted: videoProgress.isCompleted  // Use the explicit completion flag
+        // suspiciousActivity: videoProgress.suspiciousActivity
+    };
+    
+    console.log('Saving progress:', {
+        material: currentMaterialId.substring(0, 8) + '...',
+        position: progressData.lastPositionSeconds + 's',
+        completion: Math.round(progressData.completionPercent) + '%',
+        timeSpent: progressData.timeSpentMinutes + 'min',
+        isCompleted: progressData.isCompleted
+    });
+    
+    try {
+        // Get CSRF token from the page
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+        
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        if (csrfToken && csrfHeader) {
+            headers[csrfHeader] = csrfToken;
+            console.log('CSRF token found:', csrfToken.substring(0, 10) + '...');
+        } else {
+            console.warn('CSRF token not found on page');
+        }
+        
+            const response = await fetch('/learner/materials/progress', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(progressData)
+            });
+            
+            if (response.ok) {
+                const responseData = await response.json();
+                console.log('✅ Progress saved successfully!');
+                console.log('📦 Response:', responseData);
+                
+                // If material was marked as completed, show it clearly
+                if (progressData.isCompleted) {
+                    console.log('🎯 MATERIAL MARKED AS COMPLETED IN DATABASE!');
+                    console.log('📈 Course progress should update now...');
+                }
+            } else {
+                console.error('❌ Failed to save progress:', response.status);
+                const errorText = await response.text();
+                console.error('Error details:', errorText);
+            }
+    } catch (error) {
+        console.error('Failed to save progress:', error);
+    }
+}
+
+// Close modal when clicking outside
+document.getElementById('videoPlayerModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeVideoPlayer();
+    }
+});
+
+// Update enrollment progress dynamically (no page reload)
+async function updateEnrollmentProgress() {
+    const enrollmentId = '[[${enrollment.id}]]';
+    
+    try {
+        console.log('📊 Fetching updated enrollment progress...');
+        
+        // Fetch latest enrollment data as JSON
+        const response = await fetch(`/learner/enrollments/${enrollmentId}/progress`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch enrollment data');
+        }
+        
+        const enrollment = await response.json();
+        console.log('📦 Received enrollment data:', enrollment);
+        
+        // Update progress percentage
+        const progressPercent = enrollment.progressPercent || 0;
+        const progressText = Math.round(progressPercent) + '%';
+        
+        // Update progress bar
+        const progressBar = document.querySelector('.progress-bar-fill');
+        const progressDisplay = document.querySelector('.text-5xl.font-bold');
+        
+        if (progressBar && progressDisplay) {
+            progressBar.style.width = progressPercent + '%';
+            progressDisplay.textContent = progressText;
+            
+            // Add smooth animation
+            progressBar.classList.add('transition-all', 'duration-500');
+            
+            console.log('✅ Progress bar updated to:', progressText);
+        }
+        
+        // Update materials count (X/Y format)
+        const completedMaterials = enrollment.completedMaterials || 0;
+        const totalMaterials = enrollment.totalMaterials || 0;
+        
+        // Find and update the materials count display
+        const materialsDisplays = document.querySelectorAll('.font-bold');
+        for (let display of materialsDisplays) {
+            if (display.textContent.includes('/')) {
+                display.innerHTML = `<span th:text="\${enrollment.completedMaterials ?: 0}">${completedMaterials}</span>/<span th:text="\${enrollment.totalMaterials ?: 0}">${totalMaterials}</span>`;
+                console.log('✅ Materials count updated to:', completedMaterials + '/' + totalMaterials);
+                break;
+            }
+        }
+        
+        // Check if course is completed
+        if (enrollment.status === 'COMPLETED') {
+            showSuccess('🎉 Congratulations! Course completed!');
+            console.log('🎉 Course marked as COMPLETED!');
+        }
+        
+        console.log('🎉 Progress updated successfully without page reload!');
+        
+    } catch (error) {
+        console.error('❌ Failed to update progress:', error);
+        console.log('💡 Progress will be visible on next page load');
+    }
+}
+
+// DEBUG FUNCTION - Check current enrollment progress
+window.checkEnrollmentProgress = async function() {
+    await updateEnrollmentProgress();
+};
+
+console.log('💡 Debug helper loaded! Type checkEnrollmentProgress() in console to refresh progress');
+console.log('💡 Or just watch the console logs as you complete videos!');
+</script>
+
 </div>
 </body>
 </html>

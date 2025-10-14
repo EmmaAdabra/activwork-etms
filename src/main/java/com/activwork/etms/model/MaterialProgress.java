@@ -71,6 +71,9 @@ public class MaterialProgress {
     @Column(name = "updated_at")
     private ZonedDateTime updatedAt;
 
+    // @Column(name = "suspicious_activity")
+    // private Boolean suspiciousActivity = false;
+
     /**
      * Set creation and update timestamps before persisting
      */

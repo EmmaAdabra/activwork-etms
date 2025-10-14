@@ -193,6 +193,40 @@ public class EnrollmentService {
         Enrollment updated = enrollmentRepository.save(enrollment);
         return EnrollmentResponseDto.fromEntity(updated);
     }
+    
+    /**
+     * Update enrollment progress with material counts.
+     * 
+     * @param enrollmentId the enrollment UUID
+     * @param progressPercent the new progress percentage
+     * @param completedMaterials number of completed materials
+     * @param totalMaterials total number of materials
+     * @return updated enrollment
+     */
+    @Transactional
+    public EnrollmentResponseDto updateProgress(UUID enrollmentId, BigDecimal progressPercent, 
+                                                int completedMaterials, int totalMaterials) {
+        log.info("Updating progress for enrollment: {} - {}% ({}/{})", 
+                enrollmentId, progressPercent, completedMaterials, totalMaterials);
+        
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment", enrollmentId));
+        
+        enrollment.setProgressPercent(progressPercent);
+        enrollment.setCompletedMaterials(completedMaterials);
+        enrollment.setTotalMaterials(totalMaterials);
+        
+        // Auto-complete if 100%
+        if (progressPercent.compareTo(BigDecimal.valueOf(100)) >= 0) {
+            enrollment.complete();
+        }
+        
+        Enrollment updated = enrollmentRepository.save(enrollment);
+        log.info("✅ Enrollment updated: {} - Progress: {}%, Materials: {}/{}, Status: {}", 
+                enrollmentId, progressPercent, completedMaterials, totalMaterials, updated.getStatus());
+        
+        return EnrollmentResponseDto.fromEntity(updated);
+    }
 
     /**
      * Cancel enrollment.
@@ -234,6 +268,21 @@ public class EnrollmentService {
      */
     public boolean isLearnerEnrolled(UUID learnerId, UUID courseId) {
         return enrollmentRepository.existsByLearnerIdAndCourseId(learnerId, courseId);
+    }
+
+    /**
+     * Get enrollment by learner and course.
+     * 
+     * @param learnerId the learner UUID
+     * @param courseId the course UUID
+     * @return enrollment response
+     * @throws ResourceNotFoundException if enrollment not found
+     */
+    public EnrollmentResponseDto getEnrollmentByLearnerAndCourse(UUID learnerId, UUID courseId) {
+        Enrollment enrollment = enrollmentRepository.findByLearnerIdAndCourseId(learnerId, courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment", UUID.randomUUID()));
+        
+        return EnrollmentResponseDto.fromEntity(enrollment);
     }
 
     /**
