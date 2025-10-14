@@ -109,6 +109,28 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle file storage exceptions (500 Internal Server Error)
+     * 
+     * Thrown when file upload/storage operations fail.
+     */
+    @ExceptionHandler(FileStorageException.class)
+    public ResponseEntity<ErrorResponse> handleFileStorageException(
+            FileStorageException ex,
+            HttpServletRequest request) {
+        
+        log.error("File storage error: {}", ex.getMessage(), ex);
+        
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "File Storage Error",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    /**
      * Handle illegal argument exceptions (400 Bad Request)
      * 
      * Thrown when method receives invalid arguments.

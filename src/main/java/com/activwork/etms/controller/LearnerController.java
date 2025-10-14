@@ -5,6 +5,8 @@ import com.activwork.etms.security.CustomUserDetailsService;
 import com.activwork.etms.service.CourseService;
 import com.activwork.etms.service.EnrollmentService;
 import com.activwork.etms.service.FeedbackService;
+import com.activwork.etms.service.MaterialService;
+import com.activwork.etms.service.FileStorageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,10 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -50,6 +56,8 @@ public class LearnerController {
     private final CourseService courseService;
     private final EnrollmentService enrollmentService;
     private final FeedbackService feedbackService;
+    private final MaterialService materialService;
+    private final FileStorageService fileStorageService;
     private final CustomUserDetailsService userDetailsService;
 
     /**
@@ -71,9 +79,15 @@ public class LearnerController {
         List<EnrollmentResponseDto> activeEnrollments = enrollmentService.getActiveEnrollmentsByLearner(user.getId());
         List<EnrollmentResponseDto> allEnrollments = enrollmentService.getEnrollmentsByLearner(user.getId());
         
+        // Calculate completed enrollments count
+        long completedCount = allEnrollments.stream()
+                .filter(enrollment -> enrollment.getStatus().toString().equals("COMPLETED"))
+                .count();
+        
         model.addAttribute("user", user);
         model.addAttribute("activeEnrollments", activeEnrollments);
         model.addAttribute("totalEnrollments", allEnrollments.size());
+        model.addAttribute("completedCount", completedCount);
         
         return "learner/dashboard";
     }
@@ -128,7 +142,18 @@ public class LearnerController {
         var user = userDetailsService.getUserByEmail(userDetails.getUsername());
         List<EnrollmentResponseDto> enrollments = enrollmentService.getEnrollmentsByLearner(user.getId());
         
+        // Calculate enrollment counts by status
+        long activeCount = enrollments.stream()
+                .filter(enrollment -> enrollment.getStatus().toString().equals("ACTIVE"))
+                .count();
+        
+        long completedCount = enrollments.stream()
+                .filter(enrollment -> enrollment.getStatus().toString().equals("COMPLETED"))
+                .count();
+        
         model.addAttribute("enrollments", enrollments);
+        model.addAttribute("activeCount", activeCount);
+        model.addAttribute("completedCount", completedCount);
         
         return "learner/enrollments";
     }
@@ -146,7 +171,11 @@ public class LearnerController {
         
         EnrollmentResponseDto enrollment = enrollmentService.getEnrollmentById(id);
         
+        // Get course materials for this enrollment
+        List<MaterialResponseDto> materials = materialService.getActiveMaterialsByCourse(enrollment.getCourseId());
+        
         model.addAttribute("enrollment", enrollment);
+        model.addAttribute("materials", materials);
         
         return "learner/enrollment-details";
     }
@@ -234,6 +263,103 @@ public class LearnerController {
             log.error("Feedback submission failed", e);
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/learner/courses/" + id + "/feedback";
+        }
+    }
+
+    /**
+     * View/download a material file.
+     * 
+     * @param id the material UUID
+     * @param userDetails the authenticated user
+     * @return material file as response
+     */
+    @GetMapping("/materials/{id}/view")
+    public ResponseEntity<Resource> viewMaterial(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            MaterialResponseDto material = materialService.getMaterialById(id);
+            
+            // Verify user is enrolled in the course
+            boolean isEnrolled = enrollmentService.isLearnerEnrolled(user.getId(), material.getCourseId());
+            if (!isEnrolled) {
+                return ResponseEntity.status(403).build();
+            }
+            
+            // Load file resource
+            Resource resource = fileStorageService.loadFileAsResource(material.getFilename(), "material");
+            
+            // Increment view count
+            materialService.incrementViewCount(id);
+            
+            // Determine content type
+            String contentType = material.getMimeType();
+            if (contentType == null || contentType.isEmpty()) {
+                contentType = "application/octet-stream";
+            }
+            
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, 
+                            "inline; filename=\"" + material.getOriginalFilename() + "\"")
+                    .body(resource);
+                    
+        } catch (Exception e) {
+            log.error("Error viewing material: {}", id, e);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Download a material file.
+     * 
+     * @param id the material UUID
+     * @param userDetails the authenticated user
+     * @return material file as download
+     */
+    @GetMapping("/materials/{id}/download")
+    public ResponseEntity<Resource> downloadMaterial(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            MaterialResponseDto material = materialService.getMaterialById(id);
+            
+            // Verify user is enrolled in the course
+            boolean isEnrolled = enrollmentService.isLearnerEnrolled(user.getId(), material.getCourseId());
+            if (!isEnrolled) {
+                return ResponseEntity.status(403).build();
+            }
+            
+            // Check if material is downloadable
+            if (!material.getIsDownloadable()) {
+                return ResponseEntity.status(403).build();
+            }
+            
+            // Load file resource
+            Resource resource = fileStorageService.loadFileAsResource(material.getFilename(), "material");
+            
+            // Increment download count
+            materialService.incrementDownloadCount(id);
+            
+            // Determine content type
+            String contentType = material.getMimeType();
+            if (contentType == null || contentType.isEmpty()) {
+                contentType = "application/octet-stream";
+            }
+            
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, 
+                            "attachment; filename=\"" + material.getOriginalFilename() + "\"")
+                    .body(resource);
+                    
+        } catch (Exception e) {
+            log.error("Error downloading material: {}", id, e);
+            return ResponseEntity.notFound().build();
         }
     }
 }

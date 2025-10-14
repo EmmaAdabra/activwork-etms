@@ -1,10 +1,13 @@
 package com.activwork.etms.controller;
 
 import com.activwork.etms.dto.*;
+import com.activwork.etms.model.MaterialType;
 import com.activwork.etms.security.CustomUserDetailsService;
 import com.activwork.etms.service.CourseService;
 import com.activwork.etms.service.EnrollmentService;
 import com.activwork.etms.service.FeedbackService;
+import com.activwork.etms.service.FileStorageService;
+import com.activwork.etms.service.MaterialService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +17,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 import java.util.UUID;
@@ -54,6 +59,8 @@ public class InstructorController {
     private final CourseService courseService;
     private final EnrollmentService enrollmentService;
     private final FeedbackService feedbackService;
+    private final MaterialService materialService;
+    private final FileStorageService fileStorageService;
     private final CustomUserDetailsService userDetailsService;
 
     /**
@@ -144,6 +151,7 @@ public class InstructorController {
      * Create a new course.
      * 
      * @param courseCreateDto the course data
+     * @param bannerFile the course banner image (optional)
      * @param bindingResult validation results
      * @param userDetails the authenticated user
      * @param redirectAttributes attributes for redirect
@@ -152,9 +160,11 @@ public class InstructorController {
     @PostMapping("/courses/create")
     public String createCourse(
             @Valid @ModelAttribute CourseCreateDto courseCreateDto,
+            @RequestParam(value = "bannerFile", required = false) MultipartFile bannerFile,
             BindingResult bindingResult,
             @AuthenticationPrincipal UserDetails userDetails,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            Model model) {
         
         if (bindingResult.hasErrors()) {
             return "instructor/course-create";
@@ -162,17 +172,32 @@ public class InstructorController {
         
         try {
             var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            
+            // Handle banner upload if provided
+            if (bannerFile != null && !bannerFile.isEmpty()) {
+                // Validate it's an image
+                if (!fileStorageService.isImageFile(bannerFile)) {
+                    model.addAttribute("error", "Banner must be an image file (JPG, PNG, etc.)");
+                    return "instructor/course-create";
+                }
+                
+                String bannerFilename = fileStorageService.storeBanner(bannerFile);
+                String bannerUrl = "/uploads/banners/" + bannerFilename;
+                courseCreateDto.setThumbnailUrl(bannerUrl);
+            }
+            
             CourseResponseDto course = courseService.createCourse(courseCreateDto, user.getId());
             
             log.info("Course created successfully: {}", course.getId());
             redirectAttributes.addFlashAttribute("success", "Course created successfully!");
+            redirectAttributes.addFlashAttribute("newCourseId", course.getId());
             
             return "redirect:/instructor/courses";
             
         } catch (Exception e) {
             log.error("Course creation failed", e);
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/instructor/courses/create";
+            model.addAttribute("error", e.getMessage());
+            return "instructor/course-create";
         }
     }
 
@@ -186,8 +211,32 @@ public class InstructorController {
     @GetMapping("/courses/{id}/edit")
     public String showEditCourseForm(@PathVariable UUID id, Model model) {
         CourseResponseDto course = courseService.getCourseById(id);
+        List<MaterialResponseDto> materials = materialService.getMaterialsByCourse(id);
+        
+        // Create DTO with existing course data
+        CourseUpdateDto courseUpdateDto = new CourseUpdateDto();
+        courseUpdateDto.setTitle(course.getTitle());
+        courseUpdateDto.setSummary(course.getSummary());
+        courseUpdateDto.setDescription(course.getDescription());
+        courseUpdateDto.setCategory(course.getCategory());
+        courseUpdateDto.setDifficultyLevel(course.getDifficultyLevel());
+        courseUpdateDto.setDurationHours(course.getDurationHours());
+        courseUpdateDto.setMaxEnrollments(course.getMaxEnrollments());
+        courseUpdateDto.setPrice(course.getPrice());
+        courseUpdateDto.setThumbnailUrl(course.getThumbnailUrl());
+        courseUpdateDto.setVideoPreviewUrl(course.getVideoPreviewUrl());
+        courseUpdateDto.setPrerequisites(course.getPrerequisites());
+        courseUpdateDto.setLearningObjectives(course.getLearningObjectives());
+        courseUpdateDto.setTags(course.getTags());
+        courseUpdateDto.setStartDate(course.getStartDate());
+        courseUpdateDto.setEndDate(course.getEndDate());
+        courseUpdateDto.setEnrollmentDeadline(course.getEnrollmentDeadline());
+        courseUpdateDto.setIsFeatured(course.getIsFeatured());
+        courseUpdateDto.setIsActive(course.getIsActive());
+        
         model.addAttribute("course", course);
-        model.addAttribute("courseUpdateDto", new CourseUpdateDto());
+        model.addAttribute("courseUpdateDto", courseUpdateDto);
+        model.addAttribute("materials", materials);
         
         return "instructor/course-edit";
     }
@@ -197,25 +246,109 @@ public class InstructorController {
      * 
      * @param id the course UUID
      * @param courseUpdateDto the update data
+     * @param bannerFile the course banner image (optional)
      * @param bindingResult validation results
      * @param userDetails the authenticated user
      * @param redirectAttributes attributes for redirect
+     * @param model the model for view
      * @return redirect to courses list or back to form
      */
     @PostMapping("/courses/{id}/edit")
     public String updateCourse(
             @PathVariable UUID id,
             @Valid @ModelAttribute CourseUpdateDto courseUpdateDto,
+            @RequestParam(value = "bannerFile", required = false) MultipartFile bannerFile,
             BindingResult bindingResult,
             @AuthenticationPrincipal UserDetails userDetails,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            Model model,
+            HttpServletRequest request) {
         
         if (bindingResult.hasErrors()) {
-            return "instructor/course-edit";
+            // Check if this is an AJAX request
+            if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
+                // Return error response for AJAX
+                throw new RuntimeException("Validation failed: " + bindingResult.getAllErrors().toString());
+            }
+            
+            // Reload course and materials for display
+            CourseResponseDto course = courseService.getCourseById(id);
+            List<MaterialResponseDto> materials = materialService.getMaterialsByCourse(id);
+            
+            // Populate DTO with existing course data
+            courseUpdateDto.setTitle(course.getTitle());
+            courseUpdateDto.setSummary(course.getSummary());
+            courseUpdateDto.setDescription(course.getDescription());
+            courseUpdateDto.setCategory(course.getCategory());
+            courseUpdateDto.setDifficultyLevel(course.getDifficultyLevel());
+            courseUpdateDto.setDurationHours(course.getDurationHours());
+            courseUpdateDto.setMaxEnrollments(course.getMaxEnrollments());
+            courseUpdateDto.setPrice(course.getPrice());
+            courseUpdateDto.setThumbnailUrl(course.getThumbnailUrl());
+            courseUpdateDto.setVideoPreviewUrl(course.getVideoPreviewUrl());
+            courseUpdateDto.setPrerequisites(course.getPrerequisites());
+            courseUpdateDto.setLearningObjectives(course.getLearningObjectives());
+            courseUpdateDto.setTags(course.getTags());
+            courseUpdateDto.setStartDate(course.getStartDate());
+            courseUpdateDto.setEndDate(course.getEndDate());
+            courseUpdateDto.setEnrollmentDeadline(course.getEnrollmentDeadline());
+            courseUpdateDto.setIsFeatured(course.getIsFeatured());
+            courseUpdateDto.setIsActive(course.getIsActive());
+            
+            model.addAttribute("course", course);
+            model.addAttribute("courseUpdateDto", courseUpdateDto);
+            model.addAttribute("materials", materials);
+            redirectAttributes.addFlashAttribute("error", "Please fix the validation errors below.");
+            return "redirect:/instructor/courses/" + id + "/edit";
         }
         
         try {
             var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            
+            // Handle banner upload if provided
+            if (bannerFile != null && !bannerFile.isEmpty()) {
+                // Validate it's an image
+                if (!fileStorageService.isImageFile(bannerFile)) {
+                    // Check if this is an AJAX request
+                    if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
+                        throw new RuntimeException("Banner must be an image file (JPG, PNG, etc.)");
+                    }
+                    
+                    CourseResponseDto course = courseService.getCourseById(id);
+                    List<MaterialResponseDto> materials = materialService.getMaterialsByCourse(id);
+                    
+                    // Populate DTO with existing course data
+                    courseUpdateDto.setTitle(course.getTitle());
+                    courseUpdateDto.setSummary(course.getSummary());
+                    courseUpdateDto.setDescription(course.getDescription());
+                    courseUpdateDto.setCategory(course.getCategory());
+                    courseUpdateDto.setDifficultyLevel(course.getDifficultyLevel());
+                    courseUpdateDto.setDurationHours(course.getDurationHours());
+                    courseUpdateDto.setMaxEnrollments(course.getMaxEnrollments());
+                    courseUpdateDto.setPrice(course.getPrice());
+                    courseUpdateDto.setThumbnailUrl(course.getThumbnailUrl());
+                    courseUpdateDto.setVideoPreviewUrl(course.getVideoPreviewUrl());
+                    courseUpdateDto.setPrerequisites(course.getPrerequisites());
+                    courseUpdateDto.setLearningObjectives(course.getLearningObjectives());
+                    courseUpdateDto.setTags(course.getTags());
+                    courseUpdateDto.setStartDate(course.getStartDate());
+                    courseUpdateDto.setEndDate(course.getEndDate());
+                    courseUpdateDto.setEnrollmentDeadline(course.getEnrollmentDeadline());
+                    courseUpdateDto.setIsFeatured(course.getIsFeatured());
+                    courseUpdateDto.setIsActive(course.getIsActive());
+                    
+                    model.addAttribute("course", course);
+                    model.addAttribute("courseUpdateDto", courseUpdateDto);
+                    model.addAttribute("materials", materials);
+                    redirectAttributes.addFlashAttribute("error", "Banner must be an image file (JPG, PNG, etc.)");
+                    return "redirect:/instructor/courses/" + id + "/edit";
+                }
+                
+                String bannerFilename = fileStorageService.storeBanner(bannerFile);
+                String bannerUrl = "/uploads/banners/" + bannerFilename;
+                courseUpdateDto.setThumbnailUrl(bannerUrl);
+            }
+            
             courseService.updateCourse(id, courseUpdateDto, user.getId());
             
             log.info("Course updated successfully: {}", id);
@@ -225,6 +358,39 @@ public class InstructorController {
             
         } catch (Exception e) {
             log.error("Course update failed", e);
+            
+            // Check if this is an AJAX request
+            if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
+                throw e; // Re-throw for AJAX error handling
+            }
+            
+            // Reload course and materials for display
+            CourseResponseDto course = courseService.getCourseById(id);
+            List<MaterialResponseDto> materials = materialService.getMaterialsByCourse(id);
+            
+            // Populate DTO with existing course data
+            courseUpdateDto.setTitle(course.getTitle());
+            courseUpdateDto.setSummary(course.getSummary());
+            courseUpdateDto.setDescription(course.getDescription());
+            courseUpdateDto.setCategory(course.getCategory());
+            courseUpdateDto.setDifficultyLevel(course.getDifficultyLevel());
+            courseUpdateDto.setDurationHours(course.getDurationHours());
+            courseUpdateDto.setMaxEnrollments(course.getMaxEnrollments());
+            courseUpdateDto.setPrice(course.getPrice());
+            courseUpdateDto.setThumbnailUrl(course.getThumbnailUrl());
+            courseUpdateDto.setVideoPreviewUrl(course.getVideoPreviewUrl());
+            courseUpdateDto.setPrerequisites(course.getPrerequisites());
+            courseUpdateDto.setLearningObjectives(course.getLearningObjectives());
+            courseUpdateDto.setTags(course.getTags());
+            courseUpdateDto.setStartDate(course.getStartDate());
+            courseUpdateDto.setEndDate(course.getEndDate());
+            courseUpdateDto.setEnrollmentDeadline(course.getEnrollmentDeadline());
+            courseUpdateDto.setIsFeatured(course.getIsFeatured());
+            courseUpdateDto.setIsActive(course.getIsActive());
+            
+            model.addAttribute("course", course);
+            model.addAttribute("courseUpdateDto", courseUpdateDto);
+            model.addAttribute("materials", materials);
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/instructor/courses/" + id + "/edit";
         }
@@ -355,6 +521,92 @@ public class InstructorController {
         model.addAttribute("feedbackList", feedbackList);
         
         return "instructor/course-feedback";
+    }
+
+    /**
+     * Upload course material.
+     * 
+     * @param courseId the course UUID
+     * @param materialFile the material file
+     * @param materialType the type of material
+     * @param description optional description
+     * @param isRequired whether material is required
+     * @param isDownloadable whether material can be downloaded
+     * @param userDetails the authenticated user
+     * @param redirectAttributes attributes for redirect
+     * @return redirect back to course edit page
+     */
+    @PostMapping("/courses/{courseId}/materials/upload")
+    public String uploadMaterial(
+            @PathVariable("courseId") UUID courseId,
+            @RequestParam("materialFile") MultipartFile materialFile,
+            @RequestParam(value = "materialType", required = false) MaterialType materialType,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "isRequired", defaultValue = "false") Boolean isRequired,
+            @RequestParam(value = "isDownloadable", defaultValue = "true") Boolean isDownloadable,
+            @AuthenticationPrincipal UserDetails userDetails,
+            RedirectAttributes redirectAttributes,
+            HttpServletRequest request) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            
+            // Auto-detect material type if not provided
+            if (materialType == null) {
+                materialType = materialService.determineMaterialType(materialFile);
+            }
+            
+            MaterialResponseDto material = materialService.uploadMaterial(
+                courseId,
+                materialFile,
+                materialType,
+                description,
+                isRequired,
+                isDownloadable,
+                user.getId()
+            );
+            
+            log.info("Material uploaded successfully: {} for course: {}", material.getId(), courseId);
+            redirectAttributes.addFlashAttribute("success", 
+                "Material '" + materialFile.getOriginalFilename() + "' uploaded successfully!");
+            
+        } catch (Exception e) {
+            log.error("Material upload failed", e);
+            redirectAttributes.addFlashAttribute("error", "Failed to upload material: " + e.getMessage());
+        }
+        
+        return "redirect:/instructor/courses/" + courseId + "/edit";
+    }
+
+    /**
+     * Delete course material.
+     * 
+     * @param courseId the course UUID
+     * @param materialId the material UUID
+     * @param userDetails the authenticated user
+     * @param redirectAttributes attributes for redirect
+     * @return redirect back to course edit page
+     */
+    @PostMapping("/courses/{courseId}/materials/{materialId}/delete")
+    public String deleteMaterial(
+            @PathVariable("courseId") UUID courseId,
+            @PathVariable("materialId") UUID materialId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            materialService.deleteMaterial(materialId, user.getId());
+            
+            log.info("Material deleted: {}", materialId);
+            redirectAttributes.addFlashAttribute("success", "Material deleted successfully!");
+            
+        } catch (Exception e) {
+            log.error("Material deletion failed", e);
+            redirectAttributes.addFlashAttribute("error", "Failed to delete material: " + e.getMessage());
+        }
+        
+        return "redirect:/instructor/courses/" + courseId + "/edit";
     }
 }
 

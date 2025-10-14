@@ -26,11 +26,11 @@
             </button>
             <button onclick="filterEnrollments('ACTIVE')" 
                     class="enroll-filter-tab px-6 py-4 font-semibold border-b-2 border-transparent transition">
-                Active (<span th:text="${#lists.size(#lists.filter(enrollments, e -> e.status.toString() == 'ACTIVE'))}">3</span>)
+                Active (<span th:text="${activeCount}">3</span>)
             </button>
             <button onclick="filterEnrollments('COMPLETED')" 
                     class="enroll-filter-tab px-6 py-4 font-semibold border-b-2 border-transparent transition">
-                Completed (<span th:text="${#lists.size(#lists.filter(enrollments, e -> e.status.toString() == 'COMPLETED'))}">2</span>)
+                Completed (<span th:text="${completedCount}">2</span>)
             </button>
         </div>
     </div>
@@ -52,9 +52,9 @@
                 
                 <!-- Status Badge -->
                 <div class="absolute top-4 right-4">
-                    <span th:class="${enrollment.status.toString() == 'ACTIVE' ? 'bg-green-500' : 
-                                     enrollment.status.toString() == 'COMPLETED' ? 'bg-blue-500' : 
-                                     enrollment.status.toString() == 'CANCELLED' ? 'bg-red-500' : 'bg-gray-500'}"
+                    <span th:class="${enrollment.status.name() == 'ACTIVE' ? 'bg-green-500' : 
+                                     enrollment.status.name() == 'COMPLETED' ? 'bg-blue-500' : 
+                                     enrollment.status.name() == 'CANCELLED' ? 'bg-red-500' : 'bg-gray-500'}"
                           class="px-3 py-1 text-white text-sm font-semibold rounded-full">
                         <span th:text="${enrollment.status}">ACTIVE</span>
                     </span>
@@ -126,8 +126,8 @@
                 <div class="flex gap-2">
                     <a th:href="@{/learner/enrollments/{id}(id=${enrollment.id})}" 
                        class="flex-1 py-2 px-4 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white text-center font-semibold rounded-lg transition">
-                        <i th:class="${enrollment.status.toString() == 'COMPLETED' ? 'fas fa-eye' : 'fas fa-play'}" class="mr-1"></i>
-                        <span th:text="${enrollment.status.toString() == 'COMPLETED' ? 'View' : 'Continue'}">Continue</span>
+                        <i th:class="${enrollment.status.name() == 'COMPLETED' ? 'fas fa-eye' : 'fas fa-play'}" class="mr-1"></i>
+                        <span th:text="${enrollment.status.name() == 'COMPLETED' ? 'View' : 'Continue'}">Continue</span>
                     </a>
                     
                     <a th:href="@{/learner/courses/{id}/feedback(id=${enrollment.courseId})}" 

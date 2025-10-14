@@ -129,22 +129,121 @@
         </p>
     </div>
     
-    <!-- Course Materials Section (Placeholder) -->
+    <!-- Course Materials Section -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
             <i class="fas fa-folder-open mr-2"></i>Course Materials
+            <span class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
+                (<span th:text="${#lists.size(materials)}">0</span> materials)
+            </span>
         </h2>
         
         <div class="space-y-4">
-            <!-- This is a placeholder - Material listing would require MaterialService integration -->
-            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 text-center">
+            <!-- Materials List -->
+            <div th:if="${#lists.isEmpty(materials)}" class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 text-center">
                 <i class="fas fa-info-circle text-4xl text-gray-400 mb-3"></i>
                 <p class="text-gray-600 dark:text-gray-400">
-                    Course materials and learning content will be displayed here
+                    No materials available for this course yet
                 </p>
                 <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                    This feature requires material management integration
+                    Check back later or contact the instructor
                 </p>
+            </div>
+            
+            <div th:if="${!#lists.isEmpty(materials)}" class="grid gap-4">
+                <div th:each="material : ${materials}" 
+                     class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start space-x-4 flex-1">
+                            <!-- Material Type Icon -->
+                            <div class="flex-shrink-0">
+                                <div th:switch="${material.materialType}" 
+                                     class="w-12 h-12 rounded-lg flex items-center justify-center text-white">
+                                    <i th:case="'VIDEO'" class="fas fa-play text-2xl bg-red-500"></i>
+                                    <i th:case="'PDF'" class="fas fa-file-pdf text-2xl bg-red-600"></i>
+                                    <i th:case="'DOCUMENT'" class="fas fa-file-alt text-2xl bg-blue-500"></i>
+                                    <i th:case="'PRESENTATION'" class="fas fa-presentation text-2xl bg-orange-500"></i>
+                                    <i th:case="'AUDIO'" class="fas fa-music text-2xl bg-purple-500"></i>
+                                    <i th:case="'IMAGE'" class="fas fa-image text-2xl bg-green-500"></i>
+                                    <i th:case="'CODE_SAMPLE'" class="fas fa-code text-2xl bg-gray-600"></i>
+                                    <i th:case="'EXERCISE'" class="fas fa-dumbbell text-2xl bg-yellow-500"></i>
+                                    <i th:case="'QUIZ'" class="fas fa-question-circle text-2xl bg-indigo-500"></i>
+                                    <i th:case="'CERTIFICATE'" class="fas fa-certificate text-2xl bg-yellow-600"></i>
+                                    <i th:case="*" class="fas fa-file text-2xl bg-gray-500"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Material Info -->
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" 
+                                    th:text="${material.originalFilename}">Material Title</h3>
+                                
+                                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                    <span class="flex items-center">
+                                        <i class="fas fa-tag mr-1"></i>
+                                        <span th:text="${material.materialType}">PDF</span>
+                                    </span>
+                                    
+                                    <span class="flex items-center" th:if="${material.fileSize != null}">
+                                        <i class="fas fa-weight mr-1"></i>
+                                        <span th:text="${#numbers.formatDecimal(material.fileSize / 1024 / 1024, 1, 1)} + ' MB'">2.5 MB</span>
+                                    </span>
+                                    
+                                    <span class="flex items-center" th:if="${material.durationSeconds != null}">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        <span th:text="${#numbers.formatDecimal(material.durationSeconds / 60, 1, 0)} + ' min'">15 min</span>
+                                    </span>
+                                    
+                                    <span class="flex items-center" th:if="${material.isRequired}">
+                                        <i class="fas fa-star mr-1 text-yellow-500"></i>
+                                        <span class="text-yellow-600 dark:text-yellow-400 font-medium">Required</span>
+                                    </span>
+                                </div>
+                                
+                                <p th:if="${material.description != null and !#strings.isEmpty(material.description)}" 
+                                   class="text-gray-600 dark:text-gray-400 text-sm mb-3" 
+                                   th:text="${material.description}">Material description</p>
+                                
+                                <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
+                                    <span class="flex items-center">
+                                        <i class="fas fa-eye mr-1"></i>
+                                        <span th:text="${material.viewCount}">0</span> views
+                                    </span>
+                                    
+                                    <span class="flex items-center" th:if="${material.isDownloadable}">
+                                        <i class="fas fa-download mr-1"></i>
+                                        <span th:text="${material.downloadCount}">0</span> downloads
+                                    </span>
+                                    
+                                    <span class="flex items-center">
+                                        <i class="fas fa-calendar mr-1"></i>
+                                        <span th:text="${#temporals.format(material.uploadedAt, 'MMM dd, yyyy')}">Oct 10, 2025</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex items-center space-x-2">
+                            <!-- View/Download Button -->
+                            <a th:href="@{/learner/materials/{id}/view(id=${material.id})}" 
+                               class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                                <i th:if="${material.materialType.toString() == 'VIDEO'}" class="fas fa-play mr-1"></i>
+                                <i th:if="${material.materialType.toString() != 'VIDEO'}" class="fas fa-eye mr-1"></i>
+                                <span th:if="${material.materialType.toString() == 'VIDEO'}">Watch</span>
+                                <span th:if="${material.materialType.toString() != 'VIDEO'}">View</span>
+                            </a>
+                            
+                            <!-- Download Button (if downloadable) -->
+                            <a th:if="${material.isDownloadable}" 
+                               th:href="@{/learner/materials/{id}/download(id=${material.id})}" 
+                               class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition">
+                                <i class="fas fa-download mr-1"></i>
+                                Download
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

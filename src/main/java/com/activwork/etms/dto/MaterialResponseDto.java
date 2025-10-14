@@ -23,6 +23,8 @@ public class MaterialResponseDto {
     
     private String filename;
     private String originalFilename;
+    private String path;
+    private String mimeType;
     private MaterialType materialType;
     private Long fileSize;
     
@@ -52,6 +54,8 @@ public class MaterialResponseDto {
         
         dto.setFilename(material.getFilename());
         dto.setOriginalFilename(material.getOriginalFilename());
+        dto.setPath(material.getPath());
+        dto.setMimeType(material.getMimeType());
         dto.setMaterialType(material.getMaterialType());
         dto.setFileSize(material.getFileSize());
         

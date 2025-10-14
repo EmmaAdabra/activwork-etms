@@ -4,6 +4,8 @@
       layout:decorate="~{layout}">
 <head>
     <title>Edit Course - ETMS</title>
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
 </head>
 <body>
 <div layout:fragment="content">
@@ -17,10 +19,27 @@
         </p>
     </div>
     
+    <!-- Success/Error Messages -->
+    <div th:if="${success}" 
+         data-flash-success
+         class="mb-6 p-4 bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-600 text-green-700 dark:text-green-200 rounded-lg hidden">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span th:text="${success}">Success message</span>
+    </div>
+    
+    <div th:if="${error}" 
+         data-flash-error
+         class="mb-6 p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-200 rounded-lg hidden">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        <span th:text="${error}">Error message</span>
+    </div>
+    
     <!-- Course Form -->
-    <form th:action="@{/instructor/courses/{id}/edit(id=${course.id})}" 
+    <form id="courseUpdateForm"
+          th:action="@{/instructor/courses/{id}/edit(id=${course.id})}" 
           th:object="${courseUpdateDto}" 
           method="post"
+          enctype="multipart/form-data"
           class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
         
         <!-- Basic Information Section -->
@@ -38,7 +57,6 @@
                     <input type="text" 
                            id="title" 
                            th:field="*{title}" 
-                           th:placeholder="${course.title}"
                            class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                     <p th:if="${#fields.hasErrors('title')}" 
                        th:errors="*{title}" 
@@ -52,7 +70,6 @@
                     </label>
                     <textarea id="summary" 
                               th:field="*{summary}" 
-                              th:placeholder="${course.summary}"
                               rows="2"
                               class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"></textarea>
                     <p th:if="${#fields.hasErrors('summary')}" 
@@ -67,12 +84,43 @@
                     </label>
                     <textarea id="description" 
                               th:field="*{description}" 
-                              th:placeholder="${course.description}"
                               rows="6"
                               class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"></textarea>
                     <p th:if="${#fields.hasErrors('description')}" 
                        th:errors="*{description}" 
                        class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                </div>
+                
+                <!-- Course Banner / Thumbnail -->
+                <div>
+                    <label for="bannerFile" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Course Banner / Thumbnail
+                    </label>
+                    
+                    <!-- Current Banner Preview -->
+                    <div th:if="${course.thumbnailUrl}" class="mb-3">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Current banner:</p>
+                        <img th:src="@{${course.thumbnailUrl}}" 
+                             alt="Current course banner" 
+                             class="rounded-lg max-h-48 object-cover border border-gray-300 dark:border-gray-600">
+                    </div>
+                    
+                    <!-- Upload New Banner -->
+                    <input type="file" 
+                           id="bannerFile" 
+                           name="bannerFile"
+                           accept="image/*"
+                           class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-900 dark:file:text-primary-300"
+                           onchange="previewBannerEdit(event)">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Upload a new image to replace the current banner (JPG, PNG, max 5MB). Recommended size: 1200x630px
+                    </p>
+                    
+                    <!-- New Banner Preview -->
+                    <div id="bannerPreviewEdit" class="mt-3 hidden">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">New banner preview:</p>
+                        <img id="bannerPreviewImgEdit" class="rounded-lg max-h-48 object-cover" alt="New banner preview">
+                    </div>
                 </div>
                 
                 <!-- Category and Difficulty Row -->
@@ -130,7 +178,6 @@
                         <input type="number" 
                                id="durationHours" 
                                th:field="*{durationHours}" 
-                               th:placeholder="${course.durationHours}"
                                min="1"
                                class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                         <p th:if="${#fields.hasErrors('durationHours')}" 
@@ -146,7 +193,6 @@
                         <input type="number" 
                                id="maxEnrollments" 
                                th:field="*{maxEnrollments}" 
-                               th:placeholder="${course.maxEnrollments}"
                                min="1"
                                class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                         <p th:if="${#fields.hasErrors('maxEnrollments')}" 
@@ -160,6 +206,7 @@
         <!-- Form Actions -->
         <div class="flex flex-col md:flex-row gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button type="submit" 
+                    id="saveCourseBtn"
                     class="flex-1 py-3 px-6 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-semibold rounded-lg shadow-md transition">
                 <i class="fas fa-save mr-2"></i>Save Changes
             </button>
@@ -170,6 +217,399 @@
             </a>
         </div>
     </form>
+    
+    <!-- Course Materials Section -->
+    <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 pb-3 border-b border-gray-200 dark:border-gray-700">
+            <i class="fas fa-folder-open mr-2"></i>Course Materials
+        </h2>
+        
+        <!-- Material Upload Form -->
+        <div class="mb-8 p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <i class="fas fa-upload mr-2"></i>Upload New Material
+            </h3>
+            
+            <form id="materialUploadForm"
+                  th:action="@{/instructor/courses/{id}/materials/upload(id=${course.id})}" 
+                  method="post"
+                  enctype="multipart/form-data"
+                  class="space-y-4">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- File Input -->
+                    <div>
+                        <label for="materialFile" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Select File <span class="text-red-500">*</span>
+                        </label>
+                        <input type="file" 
+                               id="materialFile" 
+                               name="materialFile"
+                               required
+                               class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-900 dark:file:text-primary-300">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            PDF, Video, Documents, etc. (Max 50MB)
+                        </p>
+                    </div>
+                    
+                    <!-- Material Type -->
+                    <div>
+                        <label for="materialType" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Material Type
+                        </label>
+                        <select id="materialType" 
+                                name="materialType"
+                                class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Auto-detect</option>
+                            <option th:each="type : ${T(com.activwork.etms.model.MaterialType).values()}" 
+                                    th:value="${type}" 
+                                    th:text="${type}">
+                            </option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Leave as "Auto-detect" to determine type from file
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Description -->
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Description (Optional)
+                    </label>
+                    <textarea id="description" 
+                              name="description"
+                              rows="2"
+                              class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                              placeholder="Brief description of this material..."></textarea>
+                </div>
+                
+                <!-- Options -->
+                <div class="flex gap-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" 
+                               name="isRequired" 
+                               value="true"
+                               class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                            Required Material
+                        </span>
+                    </label>
+                    
+                    <label class="flex items-center">
+                        <input type="checkbox" 
+                               name="isDownloadable" 
+                               value="true"
+                               checked
+                               class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                            Downloadable
+                        </span>
+                    </label>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" 
+                        id="uploadMaterialBtn"
+                        class="px-6 py-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-semibold rounded-lg shadow-md transition">
+                    <i class="fas fa-upload mr-2"></i>Upload Material
+                </button>
+            </form>
+        </div>
+        
+        <!-- Existing Materials List -->
+        <div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <i class="fas fa-list mr-2"></i>Uploaded Materials
+            </h3>
+            
+            <div th:if="${materials != null and !materials.isEmpty()}" class="space-y-3">
+                <div th:each="material : ${materials}" 
+                     class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+                    
+                    <div class="flex items-center space-x-4 flex-1">
+                        <!-- Material Type Icon -->
+                        <div class="flex-shrink-0">
+                            <i th:class="${material.materialType == T(com.activwork.etms.model.MaterialType).VIDEO ? 'fas fa-video text-red-500' :
+                                          material.materialType == T(com.activwork.etms.model.MaterialType).PDF ? 'fas fa-file-pdf text-red-600' :
+                                          material.materialType == T(com.activwork.etms.model.MaterialType).AUDIO ? 'fas fa-volume-up text-purple-500' :
+                                          material.materialType == T(com.activwork.etms.model.MaterialType).IMAGE ? 'fas fa-image text-green-500' :
+                                          'fas fa-file text-blue-500'}"
+                               class="text-2xl"></i>
+                        </div>
+                        
+                        <!-- Material Info -->
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white" 
+                               th:text="${material.originalFilename}">
+                                filename.pdf
+                            </p>
+                            <div class="flex items-center space-x-3 mt-1">
+                                <span class="text-xs text-gray-500 dark:text-gray-400" 
+                                      th:text="${material.materialType}">
+                                    PDF
+                                </span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                    •
+                                </span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400" 
+                                      th:text="${#numbers.formatDecimal(material.fileSize / 1024.0 / 1024.0, 1, 2)} + ' MB'">
+                                    2.5 MB
+                                </span>
+                                <span th:if="${material.isRequired}" 
+                                      class="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded">
+                                    Required
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="flex items-center space-x-2">
+                        <a th:href="@{${material.path}}" 
+                           target="_blank"
+                           class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition">
+                            <i class="fas fa-eye mr-1"></i>View
+                        </a>
+                        
+                        <form th:action="@{/instructor/courses/{courseId}/materials/{materialId}/delete(courseId=${course.id}, materialId=${material.id})}" 
+                              method="post"
+                              onsubmit="return confirm('Are you sure you want to delete this material?');"
+                              class="inline">
+                            <button type="submit" 
+                                    class="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
+                                <i class="fas fa-trash mr-1"></i>Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div th:if="${materials == null or materials.isEmpty()}" 
+                 class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <i class="fas fa-folder-open text-4xl mb-2"></i>
+                <p>No materials uploaded yet. Upload your first material above!</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Banner Preview Script -->
+    <script>
+        // Toast Notification System
+        function showToast(message, type = 'info') {
+            // Remove existing toasts
+            const existingToasts = document.querySelectorAll('.toast');
+            existingToasts.forEach(toast => toast.remove());
+            
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 translate-x-full`;
+            
+            // Set color based on type
+            if (type === 'success') {
+                toast.classList.add('bg-green-500');
+            } else if (type === 'error') {
+                toast.classList.add('bg-red-500');
+            } else if (type === 'warning') {
+                toast.classList.add('bg-yellow-500');
+            } else {
+                toast.classList.add('bg-blue-500');
+            }
+            
+            // Add icon based on type
+            let icon = '';
+            if (type === 'success') {
+                icon = '<i class="fas fa-check-circle mr-2"></i>';
+            } else if (type === 'error') {
+                icon = '<i class="fas fa-exclamation-circle mr-2"></i>';
+            } else if (type === 'warning') {
+                icon = '<i class="fas fa-exclamation-triangle mr-2"></i>';
+            } else {
+                icon = '<i class="fas fa-info-circle mr-2"></i>';
+            }
+            
+            toast.innerHTML = icon + message;
+            
+            // Add to page
+            document.body.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, 5000);
+        }
+
+        function previewBannerEdit(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('bannerPreviewEdit');
+                    const img = document.getElementById('bannerPreviewImgEdit');
+                    img.src = e.target.result;
+                    preview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // AJAX Course Update
+        document.getElementById('courseUpdateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const saveBtn = document.getElementById('saveCourseBtn');
+            const originalText = saveBtn.innerHTML;
+            
+            // Show loading state
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+            saveBtn.disabled = true;
+            
+            // Add CSRF token if available
+            const csrfToken = document.querySelector('meta[name="_csrf"]');
+            if (csrfToken) {
+                formData.append('_csrf', csrfToken.getAttribute('content'));
+            }
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Success - show toast and redirect
+                    showToast('Course updated successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/instructor/courses';
+                    }, 1500);
+                } else {
+                    // Error - try to parse error message
+                    return response.text().then(text => {
+                        let errorMessage = 'Failed to update course. Please check the form and try again.';
+                        
+                        try {
+                            // Try to parse as JSON for structured errors
+                            const errorData = JSON.parse(text);
+                            if (errorData.message) {
+                                errorMessage = errorData.message;
+                            }
+                        } catch (e) {
+                            // If not JSON, use the text as is
+                            if (text && text.trim()) {
+                                errorMessage = text;
+                            }
+                        }
+                        
+                        throw new Error(errorMessage);
+                    });
+                }
+            })
+            .catch(error => {
+                // Show error message
+                showToast(error.message || 'Failed to update course. Please check the form and try again.', 'error');
+                console.error('Update error:', error);
+            })
+            .finally(() => {
+                // Reset button
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            });
+        });
+
+        // AJAX Material Upload
+        document.getElementById('materialUploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const uploadBtn = document.getElementById('uploadMaterialBtn');
+            const originalText = uploadBtn.innerHTML;
+            
+            // Show loading state
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
+            uploadBtn.disabled = true;
+            
+            // Add CSRF token if available
+            const csrfToken = document.querySelector('meta[name="_csrf"]');
+            if (csrfToken) {
+                formData.append('_csrf', csrfToken.getAttribute('content'));
+            }
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Success - show toast and reload
+                    showToast('Material uploaded successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    // Error - try to parse error message
+                    return response.text().then(text => {
+                        let errorMessage = 'Failed to upload material. Please try again.';
+                        
+                        try {
+                            // Try to parse as JSON for structured errors
+                            const errorData = JSON.parse(text);
+                            if (errorData.message) {
+                                errorMessage = errorData.message;
+                            }
+                        } catch (e) {
+                            // If not JSON, use the text as is
+                            if (text && text.trim()) {
+                                errorMessage = text;
+                            }
+                        }
+                        
+                        throw new Error(errorMessage);
+                    });
+                }
+            })
+            .catch(error => {
+                // Show error message
+                showToast(error.message || 'Failed to upload material. Please try again.', 'error');
+                console.error('Upload error:', error);
+            })
+            .finally(() => {
+                // Reset button
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+            });
+        });
+
+        // Show flash messages as toasts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for success message
+            const successMessage = document.querySelector('[data-flash-success]');
+            if (successMessage) {
+                showToast(successMessage.textContent, 'success');
+            }
+            
+            // Check for error message
+            const errorMessage = document.querySelector('[data-flash-error]');
+            if (errorMessage) {
+                showToast(errorMessage.textContent, 'error');
+            }
+        });
+    </script>
 </div>
 </body>
 </html>
