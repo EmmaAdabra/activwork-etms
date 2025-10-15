@@ -3,9 +3,12 @@ package com.activwork.etms.controller;
 import com.activwork.etms.dto.CourseListDto;
 import com.activwork.etms.model.CourseCategory;
 import com.activwork.etms.model.DifficultyLevel;
+import com.activwork.etms.security.CustomUserDetailsService;
 import com.activwork.etms.service.CourseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,20 +38,30 @@ import java.util.UUID;
 public class HomeController {
 
     private final CourseService courseService;
+    private final CustomUserDetailsService customUserDetailsService;
 
     /**
      * Display homepage.
      * 
+     * @param userDetails optional authenticated user details
      * @param model the model for view
      * @return homepage view name
      */
     @GetMapping("/")
-    public String showHomePage(Model model) {
+    public String showHomePage(
+            @AuthenticationPrincipal UserDetails userDetails,
+            Model model) {
         log.info("Displaying homepage");
         
         // Get featured courses for homepage
         List<CourseListDto> featuredCourses = courseService.getFeaturedCourses();
         model.addAttribute("featuredCourses", featuredCourses);
+        
+        // Add user info if authenticated
+        if (userDetails != null) {
+            var user = customUserDetailsService.getUserByEmail(userDetails.getUsername());
+            model.addAttribute("user", user);
+        }
         
         return "home";
     }

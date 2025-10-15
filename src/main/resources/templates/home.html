@@ -10,21 +10,72 @@
     <!-- Hero Section -->
     <div class="bg-gradient-to-r from-primary-600 to-primary-800 dark:from-primary-700 dark:to-primary-900 rounded-lg shadow-xl p-12 mb-12 text-white">
         <div class="max-w-3xl">
-            <h1 class="text-5xl font-bold mb-4">
-                Welcome to ETMS
-            </h1>
-            <p class="text-xl mb-8 text-primary-100">
-                Employment Training Management System - Your gateway to professional IT training and skill development
-            </p>
-            <div class="flex flex-wrap gap-4">
-                <a th:href="@{/courses}" 
-                   class="px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-100 transition shadow-md">
-                    <i class="fas fa-book mr-2"></i>Browse Courses
-                </a>
-                <a th:href="@{/register}" 
-                   class="px-8 py-3 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-400 transition border-2 border-white">
-                    <i class="fas fa-user-plus mr-2"></i>Get Started
-                </a>
+            <!-- For Instructors -->
+            <div sec:authorize="hasAuthority('INSTRUCTOR')">
+                <h1 class="text-5xl font-bold mb-4">
+                    Welcome back, <span th:text="${user != null ? user.name : 'Instructor'}">Instructor</span>!
+                </h1>
+                <p class="text-xl mb-8 text-primary-100">
+                    Share your expertise and inspire learners through quality course content
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a th:href="@{/instructor/courses/create}" 
+                       class="px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-100 transition shadow-md">
+                        <i class="fas fa-plus-circle mr-2"></i>Create New Course
+                    </a>
+                    <a th:href="@{/instructor/dashboard}" 
+                       class="px-8 py-3 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-400 transition border-2 border-white">
+                        <i class="fas fa-chart-line mr-2"></i>View Dashboard
+                    </a>
+                    <a th:href="@{/instructor/courses}" 
+                       class="px-8 py-3 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-400 transition border-2 border-white">
+                        <i class="fas fa-book mr-2"></i>My Courses
+                    </a>
+                </div>
+            </div>
+            
+            <!-- For Learners -->
+            <div sec:authorize="hasAuthority('LEARNER')">
+                <h1 class="text-5xl font-bold mb-4">
+                    Welcome back, <span th:text="${user != null ? user.name : 'Learner'}">Learner</span>!
+                </h1>
+                <p class="text-xl mb-8 text-primary-100">
+                    Continue your learning journey and advance your IT career
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a th:href="@{/courses}" 
+                       class="px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-100 transition shadow-md">
+                        <i class="fas fa-search mr-2"></i>Browse Courses
+                    </a>
+                    <a th:href="@{/learner/dashboard}" 
+                       class="px-8 py-3 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-400 transition border-2 border-white">
+                        <i class="fas fa-chart-line mr-2"></i>My Dashboard
+                    </a>
+                    <a th:href="@{/learner/enrollments}" 
+                       class="px-8 py-3 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-400 transition border-2 border-white">
+                        <i class="fas fa-book-reader mr-2"></i>My Enrollments
+                    </a>
+                </div>
+            </div>
+            
+            <!-- For Anonymous Users -->
+            <div sec:authorize="!isAuthenticated()">
+                <h1 class="text-5xl font-bold mb-4">
+                    Welcome to ETMS
+                </h1>
+                <p class="text-xl mb-8 text-primary-100">
+                    Employment Training Management System - Your gateway to professional IT training and skill development
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a th:href="@{/courses}" 
+                       class="px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-100 transition shadow-md">
+                        <i class="fas fa-book mr-2"></i>Browse Courses
+                    </a>
+                    <a th:href="@{/register}" 
+                       class="px-8 py-3 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-400 transition border-2 border-white">
+                        <i class="fas fa-user-plus mr-2"></i>Get Started
+                    </a>
+                </div>
             </div>
         </div>
     </div>

@@ -71,9 +71,131 @@
         .progress-bar-fill {
             transition: width 0.5s ease-in-out;
         }
+        
+        /* Sidebar Navigation Styles */
+        .sidebar-layout {
+            display: flex;
+            min-height: calc(100vh - 80px);
+        }
+        
+        .sidebar {
+            width: 260px;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            padding: 1.5rem 0;
+            position: fixed;
+            top: 80px;
+            left: 0;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+            z-index: 30;
+        }
+        
+        .dark .sidebar {
+            background: #1f2937;
+            border-right-color: #374151;
+        }
+        
+        .sidebar-nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: #4b5563;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .dark .sidebar-nav-item {
+            color: #9ca3af;
+        }
+        
+        .sidebar-nav-item:hover {
+            background: #f3f4f6;
+            color: #4f46e5;
+            border-left-color: #4f46e5;
+        }
+        
+        .dark .sidebar-nav-item:hover {
+            background: #374151;
+            color: #818cf8;
+            border-left-color: #818cf8;
+        }
+        
+        .sidebar-nav-item.active {
+            background: #eef2ff;
+            color: #4f46e5;
+            border-left-color: #4f46e5;
+            font-weight: 600;
+        }
+        
+        .dark .sidebar-nav-item.active {
+            background: #312e81;
+            color: #a5b4fc;
+            border-left-color: #a5b4fc;
+        }
+        
+        .sidebar-nav-item i {
+            width: 24px;
+            margin-right: 0.75rem;
+            text-align: center;
+        }
+        
+        .main-content-with-sidebar {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem 2rem 0 2rem;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .content-wrapper {
+            flex: 1 0 auto;
+        }
+        
+        .main-content-with-sidebar > footer {
+            flex-shrink: 0;
+        }
+        
+        /* Mobile sidebar */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                top: 80px;
+                z-index: 40;
+                transition: left 0.3s ease;
+                box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+            }
+            
+            .sidebar.mobile-open {
+                left: 0;
+            }
+            
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 80px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 39;
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
+            }
+            
+            .main-content-with-sidebar {
+                padding: 1rem;
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col" style="min-height: 100vh; margin: 0;">
 
     <!-- Header with Navigation -->
     <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-50">
@@ -244,14 +366,107 @@
     </div>
     
     <!-- Main Content -->
-    <main class="flex-grow container mx-auto px-4 py-8">
-        <div layout:fragment="content">
-            <!-- Page content will be injected here -->
+    <main class="flex-1">
+        <!-- Sidebar for authenticated users -->
+        <div sec:authorize="isAuthenticated()" class="sidebar-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar" id="sidebar">
+                <nav>
+                    <!-- Instructor Navigation -->
+                    <div sec:authorize="hasAuthority('INSTRUCTOR')">
+                        <a th:href="@{/}" class="sidebar-nav-item">
+                            <i class="fas fa-home"></i>
+                            <span>Home</span>
+                        </a>
+                        <a th:href="@{/instructor/dashboard}" class="sidebar-nav-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a th:href="@{/instructor/courses}" class="sidebar-nav-item">
+                            <i class="fas fa-book"></i>
+                            <span>My Courses</span>
+                        </a>
+                        <a th:href="@{/instructor/courses/create}" class="sidebar-nav-item">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Create Course</span>
+                        </a>
+                        <a th:href="@{/courses}" class="sidebar-nav-item">
+                            <i class="fas fa-search"></i>
+                            <span>Browse Courses</span>
+                        </a>
+                    </div>
+                    
+                    <!-- Learner Navigation -->
+                    <div sec:authorize="hasAuthority('LEARNER')">
+                        <a th:href="@{/}" class="sidebar-nav-item">
+                            <i class="fas fa-home"></i>
+                            <span>Home</span>
+                        </a>
+                        <a th:href="@{/learner/dashboard}" class="sidebar-nav-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a th:href="@{/learner/enrollments}" class="sidebar-nav-item">
+                            <i class="fas fa-book-reader"></i>
+                            <span>My Enrollments</span>
+                        </a>
+                        <a th:href="@{/courses}" class="sidebar-nav-item">
+                            <i class="fas fa-search"></i>
+                            <span>Browse Courses</span>
+                        </a>
+                    </div>
+                </nav>
+            </aside>
+            
+            <!-- Sidebar Overlay for Mobile -->
+            <div class="sidebar-overlay" id="sidebarOverlay"></div>
+            
+            <!-- Main Content with Sidebar -->
+            <div class="main-content-with-sidebar">
+                <div class="content-wrapper">
+                    <div layout:fragment="content">
+                        <!-- Page content will be injected here -->
+                    </div>
+                </div>
+                
+                <!-- Footer for authenticated users (inside main content area) -->
+                <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-8" style="margin-left: -2rem; margin-right: -2rem; margin-bottom: 0;">
+                    <div class="px-8 py-6">
+                        <div class="flex flex-col md:flex-row justify-between items-center">
+                            <div class="text-center md:text-left mb-4 md:mb-0">
+                                <p class="text-gray-600 dark:text-gray-400">
+                                    &copy; 2025 <span class="font-semibold text-primary-600 dark:text-primary-400">ETMS</span>. 
+                                    Employment Training Management System.
+                                </p>
+                                <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                                    Demonstrating Layered Architecture, MVC, and GRASP Patterns
+                                </p>
+                            </div>
+                            
+                            <div class="flex space-x-4 text-gray-600 dark:text-gray-400">
+                                <a href="#" class="hover:text-primary-600 dark:hover:text-primary-400">
+                                    <i class="fab fa-github text-xl"></i>
+                                </a>
+                                <a href="#" class="hover:text-primary-600 dark:hover:text-primary-400">
+                                    <i class="fab fa-linkedin text-xl"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        
+        <!-- Content without sidebar for non-authenticated users -->
+        <div sec:authorize="!isAuthenticated()" class="container mx-auto px-4 py-8">
+            <div layout:fragment="content">
+                <!-- Page content will be injected here -->
+            </div>
         </div>
     </main>
     
-    <!-- Footer -->
-    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto">
+    <!-- Footer for non-authenticated users -->
+    <footer sec:authorize="!isAuthenticated()" class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto">
         <div class="container mx-auto px-4 py-6">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="text-center md:text-left mb-4 md:mb-0">
@@ -332,6 +547,60 @@
                 setTimeout(() => msg.remove(), 500);
             });
         }, 5000);
+        
+        // Sidebar mobile toggle
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        
+        if (mobileMenuToggle && sidebar && sidebarOverlay) {
+            // Open sidebar on mobile menu toggle
+            mobileMenuToggle.addEventListener('click', () => {
+                sidebar.classList.add('mobile-open');
+                sidebarOverlay.classList.add('active');
+            });
+            
+            // Close sidebar when clicking overlay
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('mobile-open');
+                sidebarOverlay.classList.remove('active');
+            });
+        }
+        
+        // Highlight active sidebar link
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPath = window.location.pathname;
+            const sidebarLinks = document.querySelectorAll('.sidebar-nav-item');
+            
+            // Convert NodeList to Array and sort by path length (longest first)
+            const sortedLinks = Array.from(sidebarLinks).sort((a, b) => {
+                const pathA = new URL(a.href).pathname;
+                const pathB = new URL(b.href).pathname;
+                return pathB.length - pathA.length;
+            });
+            
+            let matched = false;
+            sortedLinks.forEach(link => {
+                const linkPath = new URL(link.href).pathname;
+                
+                // Only match if we haven't found a match yet
+                if (!matched) {
+                    // Exact match has highest priority
+                    if (linkPath === currentPath) {
+                        link.classList.add('active');
+                        matched = true;
+                    }
+                    // For non-root paths, check if current path starts with link path
+                    // and ensure it's a proper path segment (followed by / or end of string)
+                    else if (linkPath !== '/' && currentPath.startsWith(linkPath)) {
+                        const nextChar = currentPath.charAt(linkPath.length);
+                        if (nextChar === '/' || nextChar === '' || nextChar === '?') {
+                            link.classList.add('active');
+                            matched = true;
+                        }
+                    }
+                }
+            });
+        });
     </script>
     
     <!-- Additional page-specific scripts -->
