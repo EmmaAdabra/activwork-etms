@@ -218,6 +218,27 @@
         </div>
     </form>
     
+    <!-- Course Sections Management -->
+    <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+        <div class="flex items-center justify-between mb-6 pb-3 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                <i class="fas fa-layer-group mr-2"></i>Course Sections
+            </h2>
+            <button onclick="showAddSectionModal()" 
+                    class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition">
+                <i class="fas fa-plus mr-2"></i>Add Section
+            </button>
+        </div>
+        
+        <!-- Sections List -->
+        <div id="sectionsList" class="space-y-4">
+            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <i class="fas fa-layer-group text-4xl mb-3"></i>
+                <p>No sections yet. Click "Add Section" to create your first section.</p>
+            </div>
+        </div>
+    </div>
+    
     <!-- Course Materials Section -->
     <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 pb-3 border-b border-gray-200 dark:border-gray-700">
@@ -284,6 +305,22 @@
                               placeholder="Brief description of this material..."></textarea>
                 </div>
                 
+                <!-- Section Assignment -->
+                <div>
+                    <label for="sectionSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Assign to Section (Optional)
+                    </label>
+                    <select id="sectionSelect" 
+                            name="sectionId"
+                            class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <option value="">-- No Section (Unassigned) --</option>
+                        <!-- Sections will be populated by JavaScript -->
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        You can assign this material to a section after upload
+                    </p>
+                </div>
+                
                 <!-- Options -->
                 <div class="flex gap-6">
                     <label class="flex items-center">
@@ -317,78 +354,21 @@
             </form>
         </div>
         
-        <!-- Existing Materials List -->
+        <!-- Existing Materials List (Grouped by Section) -->
         <div>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 <i class="fas fa-list mr-2"></i>Uploaded Materials
+                <span class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2" th:if="${materials != null}">
+                    (<span th:text="${#lists.size(materials)}">0</span> materials)
+                </span>
             </h3>
             
-            <div th:if="${materials != null and !materials.isEmpty()}" class="space-y-3">
-                <div th:each="material : ${materials}" 
-                     class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition">
-                    
-                    <div class="flex items-center space-x-4 flex-1">
-                        <!-- Material Type Icon -->
-                        <div class="flex-shrink-0">
-                            <i th:class="${material.materialType == T(com.activwork.etms.model.MaterialType).VIDEO ? 'fas fa-video text-red-500' :
-                                          material.materialType == T(com.activwork.etms.model.MaterialType).PDF ? 'fas fa-file-pdf text-red-600' :
-                                          material.materialType == T(com.activwork.etms.model.MaterialType).AUDIO ? 'fas fa-volume-up text-purple-500' :
-                                          material.materialType == T(com.activwork.etms.model.MaterialType).IMAGE ? 'fas fa-image text-green-500' :
-                                          'fas fa-file text-blue-500'}"
-                               class="text-2xl"></i>
-                        </div>
-                        
-                        <!-- Material Info -->
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold text-gray-900 dark:text-white" 
-                               th:text="${material.originalFilename}">
-                                filename.pdf
-                            </p>
-                            <div class="flex items-center space-x-3 mt-1">
-                                <span class="text-xs text-gray-500 dark:text-gray-400" 
-                                      th:text="${material.materialType}">
-                                    PDF
-                                </span>
-                                <span class="text-xs text-gray-500 dark:text-gray-400">
-                                    •
-                                </span>
-                                <span class="text-xs text-gray-500 dark:text-gray-400" 
-                                      th:text="${#numbers.formatDecimal(material.fileSize / 1024.0 / 1024.0, 1, 2)} + ' MB'">
-                                    2.5 MB
-                                </span>
-                                <span th:if="${material.isRequired}" 
-                                      class="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded">
-                                    Required
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Actions -->
-                    <div class="flex items-center space-x-2">
-                        <a th:href="@{${material.path}}" 
-                           target="_blank"
-                           class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition">
-                            <i class="fas fa-eye mr-1"></i>View
-                        </a>
-                        
-                        <form th:action="@{/instructor/courses/{courseId}/materials/{materialId}/delete(courseId=${course.id}, materialId=${material.id})}" 
-                              method="post"
-                              onsubmit="return confirm('Are you sure you want to delete this material?');"
-                              class="inline">
-                            <button type="submit" 
-                                    class="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
-                                <i class="fas fa-trash mr-1"></i>Delete
-                            </button>
-                        </form>
-                    </div>
+            <!-- Materials will be dynamically grouped and rendered by JavaScript -->
+            <div id="materialsList" class="space-y-4">
+                <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <i class="fas fa-spinner fa-spin text-4xl mb-2"></i>
+                    <p>Loading materials...</p>
                 </div>
-            </div>
-            
-            <div th:if="${materials == null or materials.isEmpty()}" 
-                 class="text-center py-8 text-gray-500 dark:text-gray-400">
-                <i class="fas fa-folder-open text-4xl mb-2"></i>
-                <p>No materials uploaded yet. Upload your first material above!</p>
             </div>
         </div>
     </div>
@@ -403,7 +383,7 @@
             
             // Create toast element
             const toast = document.createElement('div');
-            toast.className = `toast fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 translate-x-full`;
+            toast.className = `toast fixed top-4 right-4 z-[9999] max-w-md px-6 py-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 translate-x-full`;
             
             // Set color based on type
             if (type === 'success') {
@@ -558,9 +538,10 @@
                 if (response.ok) {
                     // Success - show toast and reload
                     showToast('Material uploaded successfully!', 'success');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
+                    // Reload materials list without full page refresh
+                    loadMaterials();
+                    // Reset form
+                    document.getElementById('materialUploadForm').reset();
                 } else {
                     // Error - try to parse error message
                     return response.text().then(text => {
@@ -607,6 +588,638 @@
             const errorMessage = document.querySelector('[data-flash-error]');
             if (errorMessage) {
                 showToast(errorMessage.textContent, 'error');
+            }
+            
+            // Load sections and materials on page load
+            loadSections();
+            loadMaterials();
+        });
+    </script>
+    
+    <!-- Add/Edit Section Modal -->
+    <div id="sectionModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full m-4">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <h3 id="sectionModalTitle" class="text-xl font-bold text-gray-900 dark:text-white">
+                        Add Section
+                    </h3>
+                    <button onclick="closeSectionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <form id="sectionForm" class="p-6 space-y-4">
+                <input type="hidden" id="sectionId" value="">
+                
+                <div>
+                    <label for="sectionTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Section Title <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" 
+                           id="sectionTitle" 
+                           required
+                           placeholder="e.g., Introduction, Core Concepts, Advanced Topics"
+                           class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                </div>
+                
+                <div>
+                    <label for="sectionDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Description (Optional)
+                    </label>
+                    <textarea id="sectionDescription" 
+                              rows="3"
+                              placeholder="Brief description of this section..."
+                              class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"></textarea>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" 
+                            class="flex-1 py-3 px-6 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition">
+                        <i class="fas fa-check mr-2"></i>Save Section
+                    </button>
+                    <button type="button" 
+                            onclick="closeSectionModal()"
+                            class="flex-1 py-3 px-6 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-semibold rounded-lg transition">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Section Management JavaScript -->
+    <script>
+        const courseId = '[[${course.id}]]';
+        let sections = [];
+        let currentSectionId = null;
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        
+        // Load sections from server
+        async function loadSections() {
+            try {
+                const response = await fetch(`/instructor/courses/${courseId}/sections`, {
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    }
+                });
+                
+                if (response.ok) {
+                    sections = await response.json();
+                    renderSections();
+                }
+            } catch (error) {
+                console.error('Failed to load sections:', error);
+            }
+        }
+        
+        // Update section dropdown in material upload form AND material list dropdowns
+        function updateSectionDropdown() {
+            // Update upload form dropdown
+            const sectionSelect = document.getElementById('sectionSelect');
+            if (sectionSelect) {
+                // Clear existing options (except first)
+                while (sectionSelect.options.length > 1) {
+                    sectionSelect.remove(1);
+                }
+                
+                // Add sections as options
+                sections.forEach((section, index) => {
+                    const option = document.createElement('option');
+                    option.value = section.id;
+                    option.textContent = `Section ${index + 1}: ${section.title}`;
+                    sectionSelect.appendChild(option);
+                });
+            }
+            
+            // Update all material section dropdowns
+            const materialSectionSelects = document.querySelectorAll('.material-section-select');
+            materialSectionSelects.forEach(select => {
+                const currentValue = select.getAttribute('data-current-section') || select.value;
+                
+                // Clear existing options (except first "No Section" option)
+                while (select.options.length > 1) {
+                    select.remove(1);
+                }
+                
+                // Add sections as options
+                sections.forEach((section, index) => {
+                    const option = document.createElement('option');
+                    option.value = section.id;
+                    option.textContent = `Section ${index + 1}: ${section.title}`;
+                    if (currentValue === section.id) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+                
+                // If no section was matched, select "No Section"
+                if (!currentValue || currentValue === '' || currentValue === 'null') {
+                    select.value = '';
+                }
+            });
+        }
+        
+        // Render sections list
+        function renderSections() {
+            const sectionsList = document.getElementById('sectionsList');
+            updateSectionDropdown(); // Update dropdown when sections change
+            
+            if (sections.length === 0) {
+                sectionsList.innerHTML = `
+                    <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-layer-group text-4xl mb-3"></i>
+                        <p>No sections yet. Click "Add Section" to create your first section.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            sectionsList.innerHTML = sections.map((section, index) => `
+                <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-sm font-semibold text-gray-500 dark:text-gray-400">
+                                    Section ${index + 1}
+                                </span>
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                                    ${section.title}
+                                </h3>
+                            </div>
+                            
+                            ${section.description ? `
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    ${section.description}
+                                </p>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="flex items-center gap-2">
+                            <button onclick="editSection('${section.id}')" 
+                                    class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteSection('${section.id}')" 
+                                    class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Show add section modal
+        function showAddSectionModal() {
+            currentSectionId = null;
+            document.getElementById('sectionModalTitle').textContent = 'Add Section';
+            document.getElementById('sectionId').value = '';
+            document.getElementById('sectionTitle').value = '';
+            document.getElementById('sectionDescription').value = '';
+            document.getElementById('sectionModal').classList.remove('hidden');
+        }
+        
+        // Show edit section modal
+        function editSection(sectionId) {
+            const section = sections.find(s => s.id === sectionId);
+            if (!section) return;
+            
+            currentSectionId = sectionId;
+            document.getElementById('sectionModalTitle').textContent = 'Edit Section';
+            document.getElementById('sectionId').value = sectionId;
+            document.getElementById('sectionTitle').value = section.title;
+            document.getElementById('sectionDescription').value = section.description || '';
+            document.getElementById('sectionModal').classList.remove('hidden');
+        }
+        
+        // Close section modal
+        function closeSectionModal() {
+            document.getElementById('sectionModal').classList.add('hidden');
+            currentSectionId = null;
+        }
+        
+        // Save section (create or update)
+        document.getElementById('sectionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('sectionTitle').value;
+            const description = document.getElementById('sectionDescription').value;
+            const sectionId = document.getElementById('sectionId').value;
+            
+            const sectionData = {
+                title: title,
+                description: description,
+                sectionOrder: sections.length,
+                isActive: true
+            };
+            
+            try {
+                let response;
+                
+                if (sectionId) {
+                    // Update existing section
+                    response = await fetch(`/instructor/courses/${courseId}/sections/${sectionId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            [csrfHeader]: csrfToken
+                        },
+                        body: JSON.stringify(sectionData)
+                    });
+                } else {
+                    // Create new section
+                    response = await fetch(`/instructor/courses/${courseId}/sections`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            [csrfHeader]: csrfToken
+                        },
+                        body: JSON.stringify(sectionData)
+                    });
+                }
+                
+                if (response.ok) {
+                    showToast(sectionId ? 'Section updated successfully!' : 'Section created successfully!', 'success');
+                    closeSectionModal();
+                    loadSections();
+                } else {
+                    showToast('Failed to save section', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving section:', error);
+                showToast('Failed to save section', 'error');
+            }
+        });
+        
+        // Delete section
+        async function deleteSection(sectionId) {
+            if (!confirm('Are you sure you want to delete this section? Materials in this section will not be deleted, but will be unassigned.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/instructor/courses/${courseId}/sections/${sectionId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    }
+                });
+                
+                if (response.ok) {
+                    showToast('Section deleted successfully!', 'success');
+                    loadSections();
+                } else {
+                    showToast('Failed to delete section', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting section:', error);
+                showToast('Failed to delete section', 'error');
+            }
+        }
+        
+        // Remove material from section
+        async function removeMaterialFromSection(materialId) {
+            if (!confirm('Remove this material from the section? (Material will not be deleted)')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/instructor/courses/${courseId}/materials/${materialId}/section`, {
+                    method: 'DELETE',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    }
+                });
+                
+                if (response.ok) {
+                    showToast('Material removed from section', 'success');
+                    loadSections();
+                } else {
+                    showToast('Failed to remove material', 'error');
+                }
+            } catch (error) {
+                console.error('Error removing material:', error);
+                showToast('Failed to remove material', 'error');
+            }
+        }
+        
+        // Assign material to section (from dropdown in materials list)
+        async function assignMaterialToSection(selectElement) {
+            const materialId = selectElement.getAttribute('data-material-id');
+            const sectionId = selectElement.value;
+            
+            try {
+                if (sectionId === '' || sectionId === null) {
+                    // Remove from section
+                    const response = await fetch(`/instructor/courses/${courseId}/materials/${materialId}/section`, {
+                        method: 'DELETE',
+                        headers: {
+                            [csrfHeader]: csrfToken
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        showToast('Material removed from section', 'success');
+                        selectElement.setAttribute('data-current-section', '');
+                        loadSections();
+                    } else {
+                        showToast('Failed to remove material from section', 'error');
+                        // Revert selection
+                        const oldValue = selectElement.getAttribute('data-current-section');
+                        selectElement.value = oldValue || '';
+                    }
+                } else {
+                    // Assign to section
+                    const response = await fetch(`/instructor/courses/${courseId}/sections/${sectionId}/materials/${materialId}`, {
+                        method: 'POST',
+                        headers: {
+                            [csrfHeader]: csrfToken
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        showToast('Material assigned to section successfully', 'success');
+                        selectElement.setAttribute('data-current-section', sectionId);
+                        loadSections();
+                        loadMaterials();
+                    } else {
+                        showToast('Failed to assign material to section', 'error');
+                        // Revert selection
+                        const oldValue = selectElement.getAttribute('data-current-section');
+                        selectElement.value = oldValue || '';
+                    }
+                }
+            } catch (error) {
+                console.error('Error assigning material to section:', error);
+                showToast('Failed to assign material', 'error');
+                // Revert selection
+                const oldValue = selectElement.getAttribute('data-current-section');
+                selectElement.value = oldValue || '';
+            }
+        }
+        
+        // Helper: Get material icon based on type
+        function getMaterialIcon(type) {
+            const icons = {
+                'VIDEO': 'fas fa-video',
+                'PDF': 'fas fa-file-pdf',
+                'DOCUMENT': 'fas fa-file-alt',
+                'PRESENTATION': 'fas fa-presentation',
+                'AUDIO': 'fas fa-volume-up',
+                'IMAGE': 'fas fa-image',
+                'CODE_SAMPLE': 'fas fa-code',
+                'EXERCISE': 'fas fa-dumbbell',
+                'QUIZ': 'fas fa-question-circle',
+                'CERTIFICATE': 'fas fa-certificate'
+            };
+            return icons[type] || 'fas fa-file';
+        }
+        
+        // Helper: Format duration
+        function formatDuration(minutes) {
+            if (!minutes) return '0m';
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            if (hours > 0 && mins > 0) {
+                return `${hours}h ${mins}m`;
+            } else if (hours > 0) {
+                return `${hours}h`;
+            } else {
+                return `${mins}m`;
+            }
+        }
+        
+        // Load and render materials grouped by section
+        async function loadMaterials() {
+            try {
+                const response = await fetch(`/instructor/courses/${courseId}/materials`, {
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    }
+                });
+                
+                if (response.ok) {
+                    const materials = await response.json();
+                    renderMaterialsGroupedBySections(materials);
+                } else {
+                    document.getElementById('materialsList').innerHTML = `
+                        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-exclamation-circle text-4xl mb-2"></i>
+                            <p>Failed to load materials</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Failed to load materials:', error);
+                document.getElementById('materialsList').innerHTML = `
+                    <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-exclamation-circle text-4xl mb-2"></i>
+                        <p>Error loading materials</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Render materials grouped by sections
+        function renderMaterialsGroupedBySections(materials) {
+            const materialsList = document.getElementById('materialsList');
+            
+            if (!materials || materials.length === 0) {
+                materialsList.innerHTML = `
+                    <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-folder-open text-4xl mb-2"></i>
+                        <p>No materials uploaded yet. Upload your first material above!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Group materials by section
+            const grouped = {
+                unassigned: [],
+                sections: {}
+            };
+            
+            materials.forEach(material => {
+                if (material.sectionId) {
+                    if (!grouped.sections[material.sectionId]) {
+                        grouped.sections[material.sectionId] = [];
+                    }
+                    grouped.sections[material.sectionId].push(material);
+                } else {
+                    grouped.unassigned.push(material);
+                }
+            });
+            
+            let html = '';
+            
+            // Render sections with materials
+            sections.forEach((section, index) => {
+                const sectionMaterials = grouped.sections[section.id] || [];
+                if (sectionMaterials.length > 0) {
+                    html += `
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div class="bg-gray-100 dark:bg-gray-700 px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                                 onclick="toggleMaterialSection('section-${section.id}')">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-folder text-primary-500 text-lg section-toggle-icon" id="icon-section-${section.id}"></i>
+                                    <h4 class="font-semibold text-gray-900 dark:text-white">
+                                        Section ${index + 1}: ${escapeHtml(section.title)}
+                                    </h4>
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                                        (${sectionMaterials.length} material${sectionMaterials.length !== 1 ? 's' : ''})
+                                    </span>
+                                </div>
+                                <i class="fas fa-chevron-down text-gray-400 transition-transform section-chevron" id="chevron-section-${section.id}"></i>
+                            </div>
+                            <div id="section-${section.id}" class="material-section-content hidden">
+                                <div class="p-3 space-y-2 bg-white dark:bg-gray-800">
+                                    ${sectionMaterials.map(material => renderMaterialItem(material)).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            // Render unassigned materials
+            if (grouped.unassigned.length > 0) {
+                html += `
+                    <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                        <div class="bg-gray-100 dark:bg-gray-700 px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                             onclick="toggleMaterialSection('section-unassigned')">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-folder-open text-gray-400 text-lg section-toggle-icon" id="icon-section-unassigned"></i>
+                                <h4 class="font-semibold text-gray-900 dark:text-white">
+                                    Unassigned Materials
+                                </h4>
+                                <span class="text-sm text-gray-500 dark:text-gray-400">
+                                    (${grouped.unassigned.length} material${grouped.unassigned.length !== 1 ? 's' : ''})
+                                </span>
+                            </div>
+                            <i class="fas fa-chevron-down text-gray-400 transition-transform section-chevron" id="chevron-section-unassigned"></i>
+                        </div>
+                        <div id="section-unassigned" class="material-section-content hidden">
+                            <div class="p-3 space-y-2 bg-white dark:bg-gray-800">
+                                ${grouped.unassigned.map(material => renderMaterialItem(material)).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            materialsList.innerHTML = html;
+        }
+        
+        // Render individual material item
+        function renderMaterialItem(material) {
+            const iconClass = getMaterialIcon(material.materialType);
+            const fileSize = (material.fileSize / 1024 / 1024).toFixed(2);
+            const requiredBadge = material.isRequired ? 
+                '<span class="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded">Required</span>' : '';
+            
+            return `
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                    <div class="flex items-center space-x-3 flex-1">
+                        <i class="${iconClass} text-2xl ${getMaterialColor(material.materialType)}"></i>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                                ${escapeHtml(material.originalFilename)}
+                            </p>
+                            <div class="flex items-center space-x-2 mt-1">
+                                <span class="text-xs text-gray-500 dark:text-gray-400">${material.materialType}</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">•</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">${fileSize} MB</span>
+                                ${requiredBadge}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <a href="${material.path}" target="_blank"
+                           class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition">
+                            <i class="fas fa-eye mr-1"></i>View
+                        </a>
+                        <button onclick="deleteMaterialConfirm('${material.id}')"
+                                class="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
+                            <i class="fas fa-trash mr-1"></i>Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Toggle material section visibility
+        function toggleMaterialSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            const icon = document.getElementById(`icon-${sectionId}`);
+            const chevron = document.getElementById(`chevron-${sectionId}`);
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.classList.remove('fa-folder');
+                icon.classList.add('fa-folder-open');
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('hidden');
+                icon.classList.remove('fa-folder-open');
+                icon.classList.add('fa-folder');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+        
+        // Get material color based on type
+        function getMaterialColor(type) {
+            const colors = {
+                'VIDEO': 'text-red-500',
+                'PDF': 'text-red-600',
+                'AUDIO': 'text-purple-500',
+                'IMAGE': 'text-green-500',
+                'DOCUMENT': 'text-blue-500'
+            };
+            return colors[type] || 'text-blue-500';
+        }
+        
+        // Delete material with confirmation
+        async function deleteMaterialConfirm(materialId) {
+            if (!confirm('Are you sure you want to delete this material?')) {
+                return;
+            }
+            
+            try {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/instructor/courses/${courseId}/materials/${materialId}/delete`;
+                
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_csrf';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            } catch (error) {
+                console.error('Error deleting material:', error);
+                showToast('Failed to delete material', 'error');
+            }
+        }
+        
+        // Helper: Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('sectionModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSectionModal();
             }
         });
     </script>

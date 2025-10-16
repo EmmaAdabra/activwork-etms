@@ -20,6 +20,7 @@ public class MaterialResponseDto {
 
     private UUID id;
     private UUID courseId;
+    private UUID sectionId;
     
     private String filename;
     private String originalFilename;
@@ -50,6 +51,10 @@ public class MaterialResponseDto {
         
         if (material.getCourse() != null) {
             dto.setCourseId(material.getCourse().getId());
+        }
+        
+        if (material.getSection() != null) {
+            dto.setSectionId(material.getSection().getId());
         }
         
         dto.setFilename(material.getFilename());

@@ -33,6 +33,10 @@ public class Material {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "section_id")
+    private CourseSection section;
+
     @NotBlank(message = "Filename is required")
     @Size(min = 1, max = 255, message = "Filename must be between 1 and 255 characters")
     @Column(nullable = false, length = 255)
@@ -85,6 +89,10 @@ public class Material {
     @Min(value = 0, message = "Display order must be non-negative")
     @Column(name = "display_order")
     private Integer displayOrder = 0;
+
+    @Min(value = 0, message = "Material order must be non-negative")
+    @Column(name = "material_order")
+    private Integer materialOrder = 0;
 
     @Column(name = "uploaded_at", nullable = false, updatable = false)
     private ZonedDateTime uploadedAt;

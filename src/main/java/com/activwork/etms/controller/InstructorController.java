@@ -62,6 +62,7 @@ public class InstructorController {
     private final MaterialService materialService;
     private final FileStorageService fileStorageService;
     private final CustomUserDetailsService userDetailsService;
+    private final com.activwork.etms.service.CourseSectionService courseSectionService;
 
     /**
      * Display instructor dashboard.
@@ -189,10 +190,10 @@ public class InstructorController {
             CourseResponseDto course = courseService.createCourse(courseCreateDto, user.getId());
             
             log.info("Course created successfully: {}", course.getId());
-            redirectAttributes.addFlashAttribute("success", "Course created successfully!");
-            redirectAttributes.addFlashAttribute("newCourseId", course.getId());
+            redirectAttributes.addFlashAttribute("success", "Course created successfully! Now add sections and materials.");
             
-            return "redirect:/instructor/courses";
+            // Redirect to edit page to add content
+            return "redirect:/instructor/courses/" + course.getId() + "/edit";
             
         } catch (Exception e) {
             log.error("Course creation failed", e);
@@ -524,6 +525,37 @@ public class InstructorController {
     }
 
     /**
+     * Get all materials for a course (API endpoint for JavaScript).
+     * 
+     * @param courseId the course ID
+     * @param userDetails the authenticated user
+     * @return list of materials as JSON
+     */
+    @GetMapping("/courses/{courseId}/materials")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<List<MaterialResponseDto>> getCourseMaterials(
+            @PathVariable("courseId") UUID courseId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            
+            // Verify instructor owns this course
+            var course = courseService.getCourseById(courseId);
+            if (!course.getInstructorId().equals(user.getId())) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+            
+            List<MaterialResponseDto> materials = materialService.getMaterialsByCourse(courseId);
+            return org.springframework.http.ResponseEntity.ok(materials);
+            
+        } catch (Exception e) {
+            log.error("Failed to fetch materials for course: {}", courseId, e);
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
      * Upload course material.
      * 
      * @param courseId the course UUID
@@ -607,6 +639,255 @@ public class InstructorController {
         }
         
         return "redirect:/instructor/courses/" + courseId + "/edit";
+    }
+
+    // =====================================================
+    // COURSE SECTION MANAGEMENT ENDPOINTS
+    // =====================================================
+
+    /**
+     * Create a new section for a course (AJAX).
+     * 
+     * @param courseId the course UUID
+     * @param createDto the section creation DTO
+     * @param userDetails the authenticated user
+     * @return created section DTO
+     */
+    @PostMapping("/courses/{courseId}/sections")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<CourseSectionDto> createSection(
+            @PathVariable("courseId") UUID courseId,
+            @RequestBody @Valid CourseSectionCreateDto createDto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            
+            // Verify instructor owns the course
+            CourseResponseDto course = courseService.getCourseById(courseId);
+            if (!course.getInstructorId().equals(user.getId())) {
+                return org.springframework.http.ResponseEntity.status(403).build();
+            }
+            
+            CourseSectionDto section = courseSectionService.createSection(courseId, createDto);
+            log.info("Section created: {} for course: {}", section.getId(), courseId);
+            
+            return org.springframework.http.ResponseEntity.ok(section);
+            
+        } catch (Exception e) {
+            log.error("Failed to create section", e);
+            return org.springframework.http.ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Get all sections for a course (AJAX).
+     * 
+     * @param courseId the course UUID
+     * @param userDetails the authenticated user
+     * @return list of section DTOs
+     */
+    @GetMapping("/courses/{courseId}/sections")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<List<CourseSectionDto>> getCourseSections(
+            @PathVariable("courseId") UUID courseId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            
+            // Verify instructor owns the course
+            CourseResponseDto course = courseService.getCourseById(courseId);
+            if (!course.getInstructorId().equals(user.getId())) {
+                return org.springframework.http.ResponseEntity.status(403).build();
+            }
+            
+            List<CourseSectionDto> sections = courseSectionService.getSectionsWithMaterialsByCourseId(courseId);
+            return org.springframework.http.ResponseEntity.ok(sections);
+            
+        } catch (Exception e) {
+            log.error("Failed to get sections", e);
+            return org.springframework.http.ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Update a section (AJAX).
+     * 
+     * @param courseId the course UUID
+     * @param sectionId the section UUID
+     * @param updateDto the section update DTO
+     * @param userDetails the authenticated user
+     * @return updated section DTO
+     */
+    @PutMapping("/courses/{courseId}/sections/{sectionId}")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<CourseSectionDto> updateSection(
+            @PathVariable("courseId") UUID courseId,
+            @PathVariable("sectionId") UUID sectionId,
+            @RequestBody @Valid CourseSectionCreateDto updateDto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            
+            // Verify instructor owns the course
+            CourseResponseDto course = courseService.getCourseById(courseId);
+            if (!course.getInstructorId().equals(user.getId())) {
+                return org.springframework.http.ResponseEntity.status(403).build();
+            }
+            
+            CourseSectionDto section = courseSectionService.updateSection(sectionId, updateDto);
+            log.info("Section updated: {}", sectionId);
+            
+            return org.springframework.http.ResponseEntity.ok(section);
+            
+        } catch (Exception e) {
+            log.error("Failed to update section", e);
+            return org.springframework.http.ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Delete a section (AJAX).
+     * 
+     * @param courseId the course UUID
+     * @param sectionId the section UUID
+     * @param userDetails the authenticated user
+     * @return success response
+     */
+    @DeleteMapping("/courses/{courseId}/sections/{sectionId}")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<Void> deleteSection(
+            @PathVariable("courseId") UUID courseId,
+            @PathVariable("sectionId") UUID sectionId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            
+            // Verify instructor owns the course
+            CourseResponseDto course = courseService.getCourseById(courseId);
+            if (!course.getInstructorId().equals(user.getId())) {
+                return org.springframework.http.ResponseEntity.status(403).build();
+            }
+            
+            courseSectionService.deleteSection(sectionId);
+            log.info("Section deleted: {}", sectionId);
+            
+            return org.springframework.http.ResponseEntity.ok().build();
+            
+        } catch (Exception e) {
+            log.error("Failed to delete section", e);
+            return org.springframework.http.ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Assign a material to a section (AJAX).
+     * 
+     * @param courseId the course UUID
+     * @param sectionId the section UUID
+     * @param materialId the material UUID
+     * @param userDetails the authenticated user
+     * @return success response
+     */
+    @PostMapping("/courses/{courseId}/sections/{sectionId}/materials/{materialId}")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<Void> addMaterialToSection(
+            @PathVariable("courseId") UUID courseId,
+            @PathVariable("sectionId") UUID sectionId,
+            @PathVariable("materialId") UUID materialId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            
+            // Verify instructor owns the course
+            CourseResponseDto course = courseService.getCourseById(courseId);
+            if (!course.getInstructorId().equals(user.getId())) {
+                return org.springframework.http.ResponseEntity.status(403).build();
+            }
+            
+            courseSectionService.addMaterialToSection(sectionId, materialId);
+            log.info("Material {} added to section {}", materialId, sectionId);
+            
+            return org.springframework.http.ResponseEntity.ok().build();
+            
+        } catch (Exception e) {
+            log.error("Failed to add material to section", e);
+            return org.springframework.http.ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Remove a material from its section (AJAX).
+     * 
+     * @param courseId the course UUID
+     * @param materialId the material UUID
+     * @param userDetails the authenticated user
+     * @return success response
+     */
+    @DeleteMapping("/courses/{courseId}/materials/{materialId}/section")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<Void> removeMaterialFromSection(
+            @PathVariable("courseId") UUID courseId,
+            @PathVariable("materialId") UUID materialId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            
+            // Verify instructor owns the course
+            CourseResponseDto course = courseService.getCourseById(courseId);
+            if (!course.getInstructorId().equals(user.getId())) {
+                return org.springframework.http.ResponseEntity.status(403).build();
+            }
+            
+            courseSectionService.removeMaterialFromSection(materialId);
+            log.info("Material {} removed from section", materialId);
+            
+            return org.springframework.http.ResponseEntity.ok().build();
+            
+        } catch (Exception e) {
+            log.error("Failed to remove material from section", e);
+            return org.springframework.http.ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Reorder sections within a course (AJAX).
+     * 
+     * @param courseId the course UUID
+     * @param sectionIds ordered list of section IDs
+     * @param userDetails the authenticated user
+     * @return success response
+     */
+    @PutMapping("/courses/{courseId}/sections/reorder")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<Void> reorderSections(
+            @PathVariable("courseId") UUID courseId,
+            @RequestBody List<UUID> sectionIds,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            
+            // Verify instructor owns the course
+            CourseResponseDto course = courseService.getCourseById(courseId);
+            if (!course.getInstructorId().equals(user.getId())) {
+                return org.springframework.http.ResponseEntity.status(403).build();
+            }
+            
+            courseSectionService.reorderSections(courseId, sectionIds);
+            log.info("Sections reordered for course: {}", courseId);
+            
+            return org.springframework.http.ResponseEntity.ok().build();
+            
+        } catch (Exception e) {
+            log.error("Failed to reorder sections", e);
+            return org.springframework.http.ResponseEntity.badRequest().build();
+        }
     }
 }
 

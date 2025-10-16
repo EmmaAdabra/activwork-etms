@@ -129,17 +129,158 @@
         </p>
     </div>
     
-    <!-- Course Materials Section -->
+    <!-- Course Content Section (Sections or Materials) -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            <i class="fas fa-folder-open mr-2"></i>Course Materials
-            <span class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
-                (<span th:text="${#lists.size(materials)}">0</span> materials)
+            <i class="fas fa-layer-group mr-2"></i>Course Content
+            <span class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2" 
+                  th:if="${!#lists.isEmpty(sections)}">
+                (<span th:text="${#lists.size(sections)}">0</span> sections)
             </span>
         </h2>
         
-        <div class="space-y-4">
-            <!-- Materials List -->
+        <!-- Sections Accordion (if sections exist) -->
+        <div th:if="${!#lists.isEmpty(sections)}" class="space-y-3">
+            <div th:each="section, iterStat : ${sections}" 
+                 class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden section-item">
+                
+                <!-- Section Header (Clickable) -->
+                <div class="section-header bg-gray-50 dark:bg-gray-700 p-5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                     th:attr="data-section-id=${section.id}"
+                     onclick="toggleSection(this)">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4 flex-1">
+                            <!-- Toggle Icon -->
+                            <i class="fas fa-chevron-down section-icon text-gray-500 dark:text-gray-400 transition-transform"></i>
+                            
+                            <!-- Section Info -->
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-1">
+                                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Section <span th:text="${iterStat.count}">1</span>
+                                    </span>
+                                    <h3 class="text-lg font-bold text-gray-900 dark:text-white" th:text="${section.title}">
+                                        Introduction
+                                    </h3>
+                                </div>
+                                
+                                <p th:if="${section.description != null and !#strings.isEmpty(section.description)}"
+                                   class="text-sm text-gray-600 dark:text-gray-400 mb-2"
+                                   th:text="${section.description}">
+                                    Section description
+                                </p>
+                                
+                                <div class="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                                    <span>
+                                        <i class="fas fa-file mr-1"></i>
+                                        <span th:text="${section.completedMaterials ?: 0}">0</span>/<span th:text="${section.totalMaterials ?: 0}">0</span>
+                                    </span>
+                                    <span th:if="${section.durationMinutes != null and section.durationMinutes > 0}">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        <span th:text="${section.formattedDuration}">2h 30m</span>
+                                    </span>
+                                    <span th:if="${section.completionPercent != null and section.completionPercent >= 100}"
+                                          class="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs font-semibold">
+                                        <i class="fas fa-check-circle mr-1"></i>Completed
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress Circle -->
+                        <div class="flex items-center gap-3">
+                            <div class="text-right">
+                                <div class="text-lg font-bold text-gray-900 dark:text-white">
+                                    <span th:text="${section.completionPercent != null ? #numbers.formatDecimal(section.completionPercent, 1, 0) + '%' : '0%'}">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Section Content (Materials) - Initially Hidden -->
+                <div class="section-content hidden">
+                    <div th:if="${!#lists.isEmpty(section.materials)}" class="p-4 space-y-2 bg-white dark:bg-gray-800">
+                        <div th:each="material : ${section.materials}" 
+                             class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                            
+                            <div class="flex items-center gap-4 flex-1">
+                                <!-- Material Type Icon -->
+                                <div th:switch="${material.materialType.toString()}" class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center">
+                                    <div th:case="'VIDEO'" class="bg-red-100 dark:bg-red-900/30 w-full h-full rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-play text-red-600 dark:text-red-400"></i>
+                                    </div>
+                                    <div th:case="'PDF'" class="bg-red-100 dark:bg-red-900/30 w-full h-full rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-file-pdf text-red-600 dark:text-red-400"></i>
+                                    </div>
+                                    <div th:case="'AUDIO'" class="bg-purple-100 dark:bg-purple-900/30 w-full h-full rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-volume-up text-purple-600 dark:text-purple-400"></i>
+                                    </div>
+                                    <div th:case="'IMAGE'" class="bg-green-100 dark:bg-green-900/30 w-full h-full rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-image text-green-600 dark:text-green-400"></i>
+                                    </div>
+                                    <div th:case="*" class="bg-blue-100 dark:bg-blue-900/30 w-full h-full rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-file text-blue-600 dark:text-blue-400"></i>
+                                    </div>
+                                </div>
+                                
+                                <!-- Material Info -->
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-semibold text-gray-900 dark:text-white mb-1"
+                                        th:text="${material.originalFilename}">
+                                        Material Title
+                                    </h4>
+                                    
+                                    <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                                        <span th:text="${material.materialType}">VIDEO</span>
+                                        <span th:if="${material.durationSeconds != null}">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            <span th:text="${#numbers.formatDecimal(material.durationSeconds / 60, 1, 0)} + ' min'">5 min</span>
+                                        </span>
+                                        <span th:if="${material.isRequired}"
+                                              class="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded font-semibold">
+                                            <i class="fas fa-star mr-1"></i>Required
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Action Button -->
+                            <div class="flex items-center gap-2">
+                                <!-- Video Play Button -->
+                                <button th:if="${material.materialType.toString() == 'VIDEO'}"
+                                        th:data-material-id="${material.id}"
+                                        onclick="toggleVideoPlayer(this.dataset.materialId)"
+                                        class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                                    <i class="fas fa-play mr-1"></i>
+                                    <span>Watch</span>
+                                </button>
+                                
+                                <!-- Non-Video Open Button -->
+                                <a th:if="${material.materialType.toString() != 'VIDEO'}"
+                                   th:href="@{/learner/materials/{id}/view(id=${material.id})}"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                                    <i class="fas fa-external-link-alt mr-1"></i>
+                                    <span>Open</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Empty Section Message -->
+                    <div th:if="${#lists.isEmpty(section.materials)}" 
+                         class="p-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        No materials in this section yet
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Fallback: Show flat materials list if no sections -->
+        <div th:if="${#lists.isEmpty(sections)}" class="space-y-4">
             <div th:if="${#lists.isEmpty(materials)}" class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 text-center">
                 <i class="fas fa-info-circle text-4xl text-gray-400 mb-3"></i>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -325,6 +466,22 @@ let videoProgress = {
     lastUpdateTime: null,  // Track last update for accurate time calculation
     toastShown: false  // Prevent duplicate toast notifications
 };
+
+// Section accordion toggle
+function toggleSection(headerElement) {
+    const sectionItem = headerElement.closest('.section-item');
+    const sectionContent = sectionItem.querySelector('.section-content');
+    const icon = headerElement.querySelector('.section-icon');
+    
+    // Toggle content visibility
+    if (sectionContent.classList.contains('hidden')) {
+        sectionContent.classList.remove('hidden');
+        icon.style.transform = 'rotate(180deg)';
+    } else {
+        sectionContent.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
 
 // Initialize video player
 function toggleVideoPlayer(materialId) {
@@ -698,7 +855,7 @@ function showSuccess(message) {
     
     // Create success notification
     const successDiv = document.createElement('div');
-    successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in';
+    successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-[9999] animate-fade-in';
     successDiv.innerHTML = `
         <div class="flex items-center">
             <i class="fas fa-check-circle text-2xl mr-3"></i>
@@ -720,7 +877,7 @@ function showError(message) {
     
     // Create error notification
     const errorDiv = document.createElement('div');
-    errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in';
+    errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-[9999] animate-fade-in';
     errorDiv.innerHTML = `
         <div class="flex items-center">
             <i class="fas fa-exclamation-circle text-2xl mr-3"></i>
@@ -762,7 +919,7 @@ function showToast(title, message, type = 'info') {
     
     // Create toast notification
     const toastDiv = document.createElement('div');
-    toastDiv.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-5 rounded-lg shadow-2xl z-50 max-w-md animate-fade-in border-l-4 border-white`;
+    toastDiv.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-5 rounded-lg shadow-2xl z-[9999] max-w-md animate-fade-in border-l-4 border-white`;
     toastDiv.innerHTML = `
         <div class="flex items-start">
             <i class="${iconClass} text-3xl mr-4 mt-1"></i>
@@ -809,7 +966,7 @@ function showToastWithAction(title, message, type = 'info', actionLabel, actionC
     
     // Create toast notification
     const toastDiv = document.createElement('div');
-    toastDiv.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-5 rounded-lg shadow-2xl z-50 max-w-md animate-fade-in border-l-4 border-white`;
+    toastDiv.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-5 rounded-lg shadow-2xl z-[9999] max-w-md animate-fade-in border-l-4 border-white`;
     toastDiv.innerHTML = `
         <div>
             <div class="flex items-start mb-3">

@@ -59,6 +59,7 @@ public class LearnerController {
     private final MaterialService materialService;
     private final FileStorageService fileStorageService;
     private final CustomUserDetailsService userDetailsService;
+    private final com.activwork.etms.service.CourseSectionService courseSectionService;
 
     /**
      * Display learner dashboard.
@@ -171,10 +172,14 @@ public class LearnerController {
         
         EnrollmentResponseDto enrollment = enrollmentService.getEnrollmentById(id);
         
-        // Get course materials for this enrollment
+        // Get course sections with materials
+        List<com.activwork.etms.dto.CourseSectionDto> sections = courseSectionService.getSectionsWithMaterialsByCourseId(enrollment.getCourseId());
+        
+        // Get all course materials (for backward compatibility if no sections)
         List<MaterialResponseDto> materials = materialService.getActiveMaterialsByCourse(enrollment.getCourseId());
         
         model.addAttribute("enrollment", enrollment);
+        model.addAttribute("sections", sections);
         model.addAttribute("materials", materials);
         
         return "learner/enrollment-details";
