@@ -308,14 +308,23 @@ public class LearnerController {
             @Valid @ModelAttribute FeedbackDto feedbackDto,
             BindingResult bindingResult,
             @AuthenticationPrincipal UserDetails userDetails,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            Model model) {
+        
+        log.debug("Feedback submission - Path Course ID: {}, DTO Course ID: {}, Rating: {}, Comment: {}", 
+                 id, feedbackDto.getCourseId(), feedbackDto.getRating(), feedbackDto.getComment());
         
         if (bindingResult.hasErrors()) {
+            log.warn("Validation errors in feedback submission: {}", bindingResult.getAllErrors());
+            // Add course data to model for validation error display
+            CourseResponseDto course = courseService.getCourseById(id);
+            model.addAttribute("course", course);
             return "learner/feedback-form";
         }
         
         try {
             var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            // Always set courseId from path variable for security
             feedbackDto.setCourseId(id);
             
             feedbackService.submitFeedback(feedbackDto, user.getId());

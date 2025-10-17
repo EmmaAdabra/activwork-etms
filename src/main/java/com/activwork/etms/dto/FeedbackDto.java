@@ -16,7 +16,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class FeedbackDto {
 
-    @NotNull(message = "Course ID is required")
     private UUID courseId;
 
     @NotNull(message = "Rating is required")
@@ -24,6 +23,8 @@ public class FeedbackDto {
     @Max(value = 5, message = "Rating must not exceed 5")
     private Integer rating;
 
+    @NotBlank(message = "Comment is required")
+    @Size(min = 20, message = "Comment must be at least 20 characters")
     @Size(max = 1000, message = "Comment must not exceed 1000 characters")
     private String comment;
 }

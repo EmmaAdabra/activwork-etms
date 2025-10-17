@@ -192,6 +192,24 @@
                 padding: 1rem;
                 margin-left: 0;
             }
+            
+            /* Toast notification styles */
+            .toast-notification {
+                max-width: 450px !important;
+                width: 100% !important;
+            }
+            
+            @media (min-width: 640px) {
+                .toast-notification {
+                    max-width: 400px !important;
+                }
+            }
+            
+            @media (min-width: 1024px) {
+                .toast-notification {
+                    max-width: 450px !important;
+                }
+            }
         }
     </style>
 </head>
@@ -327,10 +345,10 @@
     </header>
     
     <!-- Flash Messages -->
-    <div class="container mx-auto px-4 mt-4">
+    <div class="fixed top-4 right-4 px-4 z-[9999] toast-notification">
         <!-- Success Message -->
         <div th:if="${success}" 
-             class="bg-green-100 dark:bg-green-900 border-l-4 border-green-500 text-green-700 dark:text-green-200 p-4 rounded-lg mb-4 flex items-center justify-between">
+             class="bg-green-100 dark:bg-green-900 border-l-4 border-green-500 text-green-700 dark:text-green-200 p-4 rounded-lg mb-4 flex items-center justify-between shadow-lg">
             <div class="flex items-center">
                 <i class="fas fa-check-circle mr-3"></i>
                 <span th:text="${success}">Success message</span>
@@ -342,7 +360,7 @@
         
         <!-- Error Message -->
         <div th:if="${error}" 
-             class="bg-red-100 dark:bg-red-900 border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4 flex items-center justify-between">
+             class="bg-red-100 dark:bg-red-900 border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4 flex items-center justify-between shadow-lg">
             <div class="flex items-center">
                 <i class="fas fa-exclamation-circle mr-3"></i>
                 <span th:text="${error}">Error message</span>
@@ -354,7 +372,7 @@
         
         <!-- Info Message -->
         <div th:if="${message}" 
-             class="bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500 text-blue-700 dark:text-blue-200 p-4 rounded-lg mb-4 flex items-center justify-between">
+             class="bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500 text-blue-700 dark:text-blue-200 p-4 rounded-lg mb-4 flex items-center justify-between shadow-lg">
             <div class="flex items-center">
                 <i class="fas fa-info-circle mr-3"></i>
                 <span th:text="${message}">Info message</span>

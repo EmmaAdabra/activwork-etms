@@ -57,6 +57,7 @@ public class FeedbackService {
     @Transactional
     public FeedbackResponseDto submitFeedback(FeedbackDto feedbackDto, UUID learnerId) {
         log.info("Submitting feedback for course {} by learner {}", feedbackDto.getCourseId(), learnerId);
+        log.debug("Feedback data - Rating: {}, Comment: {}", feedbackDto.getRating(), feedbackDto.getComment());
         
         // Get learner
         User learner = userRepository.findById(learnerId)
@@ -77,7 +78,9 @@ public class FeedbackService {
         }
         
         // Business rule: One feedback per learner per course
-        if (feedbackRepository.existsByLearnerIdAndCourseId(learnerId, feedbackDto.getCourseId())) {
+        boolean existingFeedback = feedbackRepository.existsByLearnerIdAndCourseId(learnerId, feedbackDto.getCourseId());
+        log.debug("Existing feedback check - Learner: {}, Course: {}, Exists: {}", learnerId, feedbackDto.getCourseId(), existingFeedback);
+        if (existingFeedback) {
             throw new IllegalArgumentException("You have already submitted feedback for this course");
         }
         
@@ -89,11 +92,15 @@ public class FeedbackService {
         feedback.setComment(feedbackDto.getComment());
         feedback.setIsVisible(true);
         
+        log.debug("Created feedback entity - Rating: {}, Comment: {}, Learner: {}, Course: {}", 
+                feedback.getRating(), feedback.getComment(), feedback.getLearner().getId(), feedback.getCourse().getId());
+        
         Feedback savedFeedback = feedbackRepository.save(feedback);
         
         // Note: Database trigger automatically updates course average_rating
         
-        log.info("Feedback submitted successfully. ID: {}", savedFeedback.getId());
+        log.info("Feedback submitted successfully. ID: {}, Rating: {}, Comment: {}", 
+                savedFeedback.getId(), savedFeedback.getRating(), savedFeedback.getComment());
         return FeedbackResponseDto.fromEntity(savedFeedback);
     }
 

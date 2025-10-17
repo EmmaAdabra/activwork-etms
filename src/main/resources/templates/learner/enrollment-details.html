@@ -971,6 +971,7 @@ function showError(message) {
 // Show toast notification (for more detailed messages)
 function showToast(title, message, type = 'info') {
     console.log(`[${type.toUpperCase()}]`, title, '-', message);
+    console.log('Creating toast notification...');
     
     // Determine styling based on type
     let bgColor, iconClass, icon;
@@ -994,7 +995,7 @@ function showToast(title, message, type = 'info') {
     
     // Create toast notification
     const toastDiv = document.createElement('div');
-    toastDiv.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-5 rounded-lg shadow-2xl z-[9999] max-w-md animate-fade-in border-l-4 border-white`;
+    toastDiv.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-5 rounded-lg shadow-2xl z-[9999] toast-notification animate-fade-in border-l-4 border-white`;
     toastDiv.innerHTML = `
         <div class="flex items-start">
             <i class="${iconClass} text-3xl mr-4 mt-1"></i>
@@ -1009,6 +1010,7 @@ function showToast(title, message, type = 'info') {
     `;
     
     document.body.appendChild(toastDiv);
+    console.log('Toast notification added to DOM:', toastDiv);
     
     // Remove after 10 seconds (longer for important messages)
     setTimeout(() => {
@@ -1041,7 +1043,7 @@ function showToastWithAction(title, message, type = 'info', actionLabel, actionC
     
     // Create toast notification
     const toastDiv = document.createElement('div');
-    toastDiv.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-5 rounded-lg shadow-2xl z-[9999] max-w-md animate-fade-in border-l-4 border-white`;
+    toastDiv.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-5 rounded-lg shadow-2xl z-[9999] toast-notification animate-fade-in border-l-4 border-white`;
     toastDiv.innerHTML = `
         <div>
             <div class="flex items-start mb-3">

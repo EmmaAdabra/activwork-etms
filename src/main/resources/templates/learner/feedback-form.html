@@ -46,7 +46,9 @@
         <form th:action="@{/learner/courses/{id}/feedback(id=${course.id})}" 
               th:object="${feedbackDto}" 
               method="post"
-              class="space-y-6">
+              class="space-y-6"
+              onsubmit="console.log('Form submitting with rating:', document.getElementById('ratingValue').value, 'comment:', document.getElementById('comment').value);">
+            
             
             <!-- Rating Section -->
             <div>
@@ -156,6 +158,7 @@
                 ratingValue.value = selectedRating;
                 ratingText.textContent = ratingLabels[selectedRating];
                 highlightStars(selectedRating, true);
+                console.log('Rating selected:', selectedRating, 'Value set to:', ratingValue.value);
             });
         });
         
