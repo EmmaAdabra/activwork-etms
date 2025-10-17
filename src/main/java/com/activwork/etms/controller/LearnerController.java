@@ -216,6 +216,37 @@ public class LearnerController {
     }
 
     /**
+     * Get all material progress for an enrollment.
+     * 
+     * @param id the enrollment UUID
+     * @param userDetails the authenticated user
+     * @return list of material progress
+     */
+    @GetMapping("/enrollments/{id}/materials/progress")
+    @ResponseBody
+    public ResponseEntity<List<MaterialProgressDto>> getEnrollmentMaterialProgress(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            EnrollmentResponseDto enrollment = enrollmentService.getEnrollmentById(id);
+            
+            // Verify user owns this enrollment
+            if (!enrollment.getLearnerId().equals(user.getId())) {
+                return ResponseEntity.status(403).build();
+            }
+            
+            List<MaterialProgressDto> progressList = materialService.getMaterialProgressByEnrollment(id);
+            return ResponseEntity.ok(progressList);
+            
+        } catch (Exception e) {
+            log.error("Failed to fetch material progress for enrollment: {}", id, e);
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    /**
      * Cancel enrollment.
      * 
      * @param id the enrollment UUID

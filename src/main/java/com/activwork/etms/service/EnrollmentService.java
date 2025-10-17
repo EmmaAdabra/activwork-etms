@@ -216,9 +216,19 @@ public class EnrollmentService {
         enrollment.setCompletedMaterials(completedMaterials);
         enrollment.setTotalMaterials(totalMaterials);
         
-        // Auto-complete if 100%
+        // Auto-complete if 100%, revert to ACTIVE if less than 100%
         if (progressPercent.compareTo(BigDecimal.valueOf(100)) >= 0) {
-            enrollment.complete();
+            if (!EnrollmentStatus.COMPLETED.equals(enrollment.getStatus())) {
+                enrollment.complete();
+                log.info("🎉 Course COMPLETED for enrollment: {}", enrollmentId);
+            }
+        } else {
+            // If progress drops below 100%, revert to ACTIVE status
+            if (EnrollmentStatus.COMPLETED.equals(enrollment.getStatus())) {
+                enrollment.setStatus(EnrollmentStatus.ACTIVE);
+                enrollment.setCompletionDate(null);
+                log.info("↩️ Course status reverted to ACTIVE for enrollment: {}", enrollmentId);
+            }
         }
         
         Enrollment updated = enrollmentRepository.save(enrollment);

@@ -70,17 +70,11 @@
                          th:style="'width: ' + ${enrollment.progressPercent ?: 0} + '%'"></div>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-4 text-center text-sm">
+                <div class="text-center text-sm">
                     <div>
                         <p class="text-primary-100">Materials</p>
-                        <p class="font-bold">
+                        <p class="font-bold" data-materials-count>
                             <span th:text="${enrollment.completedMaterials ?: 0}">5</span>/<span th:text="${enrollment.totalMaterials ?: 0}">10</span>
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-primary-100">Time</p>
-                        <p class="font-bold">
-                            <span th:text="${enrollment.timeSpentMinutes != null ? (enrollment.timeSpentMinutes / 60) : 0}">5</span>h
                         </p>
                     </div>
                 </div>
@@ -173,25 +167,8 @@
                                 <div class="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                                     <span>
                                         <i class="fas fa-file mr-1"></i>
-                                        <span th:text="${section.completedMaterials ?: 0}">0</span>/<span th:text="${section.totalMaterials ?: 0}">0</span>
+                                        <span th:text="${section.totalMaterials ?: 0}">0</span> materials
                                     </span>
-                                    <span th:if="${section.durationMinutes != null and section.durationMinutes > 0}">
-                                        <i class="fas fa-clock mr-1"></i>
-                                        <span th:text="${section.formattedDuration}">2h 30m</span>
-                                    </span>
-                                    <span th:if="${section.completionPercent != null and section.completionPercent >= 100}"
-                                          class="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs font-semibold">
-                                        <i class="fas fa-check-circle mr-1"></i>Completed
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Progress Circle -->
-                        <div class="flex items-center gap-3">
-                            <div class="text-right">
-                                <div class="text-lg font-bold text-gray-900 dark:text-white">
-                                    <span th:text="${section.completionPercent != null ? #numbers.formatDecimal(section.completionPercent, 1, 0) + '%' : '0%'}">0%</span>
                                 </div>
                             </div>
                         </div>
@@ -246,7 +223,7 @@
                             </div>
                             
                             <!-- Action Button -->
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-3">
                                 <!-- Video Play Button -->
                                 <button th:if="${material.materialType.toString() == 'VIDEO'}"
                                         th:data-material-id="${material.id}"
@@ -256,15 +233,31 @@
                                     <span>Watch</span>
                                 </button>
                                 
-                                <!-- Non-Video Open Button -->
-                                <a th:if="${material.materialType.toString() != 'VIDEO'}"
-                                   th:href="@{/learner/materials/{id}/view(id=${material.id})}"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
-                                    <i class="fas fa-external-link-alt mr-1"></i>
-                                    <span>Open</span>
-                                </a>
+                                <!-- Non-Video: Open Button + Completion Checkbox -->
+                                <div th:if="${material.materialType.toString() != 'VIDEO'}" class="flex items-center gap-3">
+                                    <a th:href="@{/learner/materials/{id}/view(id=${material.id})}"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                                        <i class="fas fa-external-link-alt mr-1"></i>
+                                        <span>Open</span>
+                                    </a>
+                                    
+                                    <!-- Mark as Complete Checkbox (hidden initially, shown by JS if not completed) -->
+                                    <label class="flex items-center gap-2 cursor-pointer group" 
+                                           th:id="'completion-label-' + ${material.id}"
+                                           th:data-material-id="${material.id}">
+                                        <input type="checkbox"
+                                               th:id="'complete-' + ${material.id}"
+                                               th:data-material-id="${material.id}"
+                                               th:data-enrollment-id="${enrollment.id}"
+                                               onchange="markMaterialComplete(this)"
+                                               class="w-5 h-5 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer">
+                                        <span class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200">
+                                            Mark complete
+                                        </span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -360,7 +353,7 @@
                         </div>
                         
                         <!-- Action Buttons -->
-                        <div class="flex items-center space-x-2">
+                        <div class="flex flex-col md:flex-row items-end md:items-center gap-3">
                             <!-- Video Player Toggle Button -->
                             <button th:if="${material.materialType.toString() == 'VIDEO'}" 
                                     th:data-material-id="${material.id}"
@@ -370,15 +363,31 @@
                                 <span>Watch Video</span>
                             </button>
                             
-                            <!-- View Button for non-video materials (opens in new tab) -->
-                            <a th:if="${material.materialType.toString() != 'VIDEO'}" 
-                               th:href="@{/learner/materials/{id}/view(id=${material.id})}" 
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
-                                <i class="fas fa-external-link-alt mr-1"></i>
-                                <span>Open</span>
-                            </a>
+                            <!-- Non-Video: Open Button + Completion Checkbox -->
+                            <div th:if="${material.materialType.toString() != 'VIDEO'}" class="flex items-center gap-3">
+                                <a th:href="@{/learner/materials/{id}/view(id=${material.id})}" 
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                                    <i class="fas fa-external-link-alt mr-1"></i>
+                                    <span>Open</span>
+                                </a>
+                                
+                                <!-- Mark as Complete Checkbox (hidden initially, shown by JS if not completed) -->
+                                <label class="flex items-center gap-2 cursor-pointer group" 
+                                       th:id="'completion-label-' + ${material.id}"
+                                       th:data-material-id="${material.id}">
+                                    <input type="checkbox"
+                                           th:id="'complete-' + ${material.id}"
+                                           th:data-material-id="${material.id}"
+                                           th:data-enrollment-id="${enrollment.id}"
+                                           onchange="markMaterialComplete(this)"
+                                           class="w-5 h-5 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer">
+                                    <span class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200">
+                                        Mark complete
+                                    </span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -686,6 +695,14 @@ function onVideoSeeking() {
     const video = document.getElementById('videoPlayer');
     const seekDistance = Math.abs(video.currentTime - videoProgress.lastPosition);
     
+    // ⭐ DEMO MODE: Anti-cheating disabled for prototype presentation
+    // Allow free navigation at all times
+    console.log('✅ DEMO MODE: Anti-cheating disabled - Free navigation allowed');
+    videoProgress.lastPosition = video.currentTime;
+    return; // Skip all anti-cheating checks
+    
+    // [CODE BELOW IS DISABLED IN DEMO MODE]
+    
     // Allow free navigation if video is already completed
     if (videoProgress.isCompleted) {
         console.log('✅ Video already completed - Free navigation allowed');
@@ -797,30 +814,88 @@ function onVideoEnded() {
 
 // Validate video completion
 function validateVideoCompletion(watchPercentage) {
-    const seekPenalty = Math.min(videoProgress.seekCount * 5, 20);
-    const requiredPercentage = Math.max(80 - seekPenalty, 60);
-    
-    // TEMPORARY: More lenient validation for testing (30% minimum)
-    const testingRequiredPercentage = 30;  // Changed from 60-80% to 30% for testing
-    
-    console.log('🔍 Validation details:');
+    // ⭐ DEMO MODE: Disabled for prototype presentation
+    // Always validates video completion regardless of watch time or seeking
+    console.log('✅ DEMO MODE: Video validation bypassed');
     console.log('   - Watch percentage:', Math.round(watchPercentage) + '%');
-    console.log('   - Seek penalty:', seekPenalty + '%');
-    console.log('   - Required percentage (production):', requiredPercentage + '%');
-    console.log('   - Required percentage (testing):', testingRequiredPercentage + '%');
-    console.log('   - Suspicious activity:', videoProgress.suspiciousActivity);
-    console.log('   - Passes validation:', watchPercentage >= testingRequiredPercentage);
+    console.log('   - Validation: ALWAYS TRUE (Demo Mode)');
     
-    // For testing: Only require 30% watch time, ignore suspicious activity
-    return watchPercentage >= testingRequiredPercentage;
+    return true;  // Always validate for demo/testing purposes
 }
 
 // Mark video as completed
 function markVideoAsCompleted() {
+    console.log('🎬 markVideoAsCompleted() called');
+    console.log('📊 videoProgress.isCompleted:', videoProgress.isCompleted);
+    
     showSuccess('Video completed! Great job!');
     
-    // Update progress dynamically without page reload
-    updateEnrollmentProgress();
+    // Save the final progress with completion status
+    saveVideoProgress().then(() => {
+        console.log('💾 Video progress saved, now updating enrollment progress');
+        // Update progress dynamically without page reload
+        updateEnrollmentProgress();
+    });
+}
+
+// Mark non-video material as complete (toggle behavior)
+async function markMaterialComplete(checkbox) {
+    const materialId = checkbox.dataset.materialId;
+    const enrollmentId = checkbox.dataset.enrollmentId;
+    const isCompleted = checkbox.checked;
+    
+    console.log('🔍 Checkbox toggled:', {
+        materialId,
+        enrollmentId,
+        checked: isCompleted
+    });
+    
+    // Disable checkbox during request
+    checkbox.disabled = true;
+    
+    try {
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        
+        const response = await fetch('/learner/materials/progress', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify({
+                materialId: materialId,
+                isCompleted: isCompleted,
+                completionPercent: isCompleted ? 100.0 : 0.0,
+                timeSpentMinutes: 0,
+                lastPositionSeconds: 0
+            })
+        });
+        
+        if (response.ok) {
+            if (isCompleted) {
+                showSuccess('Material marked as complete!');
+            } else {
+                showToast('Material marked as incomplete', 'info');
+            }
+            
+            // Update progress dynamically
+            updateEnrollmentProgress();
+        } else {
+            // Get error details from response
+            const errorText = await response.text();
+            console.error('❌ Backend error:', response.status, errorText);
+            throw new Error(`Failed to update material status: ${response.status} - ${errorText.substring(0, 100)}`);
+        }
+    } catch (error) {
+        console.error('Error updating material status:', error);
+        showError('Failed to update material status. Please try again.');
+        // Revert checkbox state on error
+        checkbox.checked = !isCompleted;
+    } finally {
+        // Re-enable checkbox
+        checkbox.disabled = false;
+    }
 }
 
 // Show warning message
@@ -1049,12 +1124,13 @@ async function saveVideoProgress() {
         // suspiciousActivity: videoProgress.suspiciousActivity
     };
     
-    console.log('Saving progress:', {
+    console.log('💾 Saving video progress:', {
         material: currentMaterialId.substring(0, 8) + '...',
         position: progressData.lastPositionSeconds + 's',
         completion: Math.round(progressData.completionPercent) + '%',
         timeSpent: progressData.timeSpentMinutes + 'min',
-        isCompleted: progressData.isCompleted
+        isCompleted: progressData.isCompleted,
+        fullData: progressData
     });
     
     try {
@@ -1126,9 +1202,14 @@ async function updateEnrollmentProgress() {
         const progressPercent = enrollment.progressPercent || 0;
         const progressText = Math.round(progressPercent) + '%';
         
+        console.log('🔍 Looking for progress bar elements...');
+        
         // Update progress bar
         const progressBar = document.querySelector('.progress-bar-fill');
         const progressDisplay = document.querySelector('.text-5xl.font-bold');
+        
+        console.log('🔍 Found progress bar:', progressBar);
+        console.log('🔍 Found progress display:', progressDisplay);
         
         if (progressBar && progressDisplay) {
             progressBar.style.width = progressPercent + '%';
@@ -1138,6 +1219,8 @@ async function updateEnrollmentProgress() {
             progressBar.classList.add('transition-all', 'duration-500');
             
             console.log('✅ Progress bar updated to:', progressText);
+        } else {
+            console.warn('⚠️ Could not find progress bar elements!');
         }
         
         // Update materials count (X/Y format)
@@ -1145,19 +1228,22 @@ async function updateEnrollmentProgress() {
         const totalMaterials = enrollment.totalMaterials || 0;
         
         // Find and update the materials count display
-        const materialsDisplays = document.querySelectorAll('.font-bold');
-        for (let display of materialsDisplays) {
-            if (display.textContent.includes('/')) {
-                display.innerHTML = `<span th:text="\${enrollment.completedMaterials ?: 0}">${completedMaterials}</span>/<span th:text="\${enrollment.totalMaterials ?: 0}">${totalMaterials}</span>`;
-                console.log('✅ Materials count updated to:', completedMaterials + '/' + totalMaterials);
-                break;
-            }
+        const materialsCountElement = document.querySelector('[data-materials-count]');
+        if (materialsCountElement) {
+            materialsCountElement.textContent = `${completedMaterials}/${totalMaterials}`;
+            console.log('✅ Materials count updated to:', completedMaterials + '/' + totalMaterials);
         }
         
-        // Check if course is completed
-        if (enrollment.status === 'COMPLETED') {
+        // Only show completion toast if status just changed to COMPLETED
+        // (We check if the current displayed progress was less than 100%)
+        const currentProgressText = document.querySelector('.text-5xl.font-bold')?.textContent;
+        const wasNotCompleted = currentProgressText && parseInt(currentProgressText) < 100;
+        
+        if (enrollment.status === 'COMPLETED' && wasNotCompleted) {
             showSuccess('🎉 Congratulations! Course completed!');
             console.log('🎉 Course marked as COMPLETED!');
+        } else if (enrollment.status === 'COMPLETED') {
+            console.log('ℹ️ Course already completed');
         }
         
         console.log('🎉 Progress updated successfully without page reload!');
@@ -1175,6 +1261,69 @@ window.checkEnrollmentProgress = async function() {
 
 console.log('💡 Debug helper loaded! Type checkEnrollmentProgress() in console to refresh progress');
 console.log('💡 Or just watch the console logs as you complete videos!');
+console.log('💡 Type resetMaterialProgress("materialId") to reset a material for testing');
+
+// DEBUG: Reset material progress (for testing only)
+window.resetMaterialProgress = async function(materialId) {
+    const enrollmentId = '[[${enrollment.id}]]';
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+    
+    try {
+        const response = await fetch('/learner/materials/progress', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify({
+                materialId: materialId,
+                isCompleted: false,
+                completionPercent: 0.0,
+                timeSpentMinutes: 0,
+                lastPositionSeconds: 0
+            })
+        });
+        
+        if (response.ok) {
+            console.log('✅ Material progress reset!');
+            window.location.reload();
+        } else {
+            console.error('❌ Failed to reset progress');
+        }
+    } catch (error) {
+        console.error('Error resetting progress:', error);
+    }
+};
+
+// Load material progress on page load
+async function loadMaterialProgress() {
+    const enrollmentId = '[[${enrollment.id}]]';
+    
+    try {
+        const response = await fetch(`/learner/enrollments/${enrollmentId}/materials/progress`);
+        
+        if (response.ok) {
+            const progressData = await response.json();
+            
+            // Pre-check completed materials
+            progressData.forEach(progress => {
+                const checkbox = document.querySelector(`input[data-material-id="${progress.materialId}"]`);
+                if (checkbox) {
+                    // Set checkbox state based on completion
+                    checkbox.checked = progress.isCompleted || false;
+                }
+            });
+            
+            console.log('✅ Material progress loaded');
+        }
+    } catch (error) {
+        console.error('Failed to load material progress:', error);
+    }
+}
+
+// Load progress when page loads
+loadMaterialProgress();
 </script>
 
 </div>
