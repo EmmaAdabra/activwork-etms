@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle != null ? pageTitle + ' - ETMS' : 'Employment Training Management System'}">ETMS</title>
+    <title th:text="${pageTitle != null ? pageTitle + ' - ActivWork Training Portal' : 'ActivWork Training Portal'}">ActivWork Training Portal</title>
     
     <!-- CSRF Token Meta Tags -->
     <meta name="_csrf" th:content="${_csrf.token}"/>
@@ -221,8 +221,8 @@
             <div class="flex items-center justify-between">
                 <!-- Logo -->
                 <a th:href="@{/}" class="flex items-center space-x-2">
-                    <i class="fas fa-graduation-cap text-primary-600 dark:text-primary-400 text-3xl"></i>
-                    <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">ETMS</span>
+                    <i class="fas fa-briefcase text-primary-600 dark:text-primary-400 text-3xl"></i>
+                    <span class="text-xl font-bold text-primary-600 dark:text-primary-400">ActivWork Training Portal</span>
                 </a>
                 
                 <!-- Desktop Navigation -->
@@ -232,7 +232,7 @@
                     <a th:href="@{/courses}" class="hover:text-primary-600 dark:hover:text-primary-400">Courses</a>
                     
                     <!-- Authenticated User Links -->
-                    <div sec:authorize="isAuthenticated()">
+                    <div sec:authorize="isAuthenticated()" class="flex items-center space-x-6">
                         <a th:href="@{/dashboard}" class="hover:text-primary-600 dark:hover:text-primary-400">Dashboard</a>
                         
                         <!-- Instructor-only Links -->
@@ -309,16 +309,16 @@
                     <a th:href="@{/}" class="hover:text-primary-600 dark:hover:text-primary-400">Home</a>
                     <a th:href="@{/courses}" class="hover:text-primary-600 dark:hover:text-primary-400">Courses</a>
                     
-                    <div sec:authorize="isAuthenticated()">
-                        <a th:href="@{/dashboard}" class="hover:text-primary-600 dark:hover:text-primary-400">Dashboard</a>
+                    <div sec:authorize="isAuthenticated()" class="space-y-2">
+                        <a th:href="@{/dashboard}" class="block hover:text-primary-600 dark:hover:text-primary-400">Dashboard</a>
                         
                         <a sec:authorize="hasAuthority('INSTRUCTOR')" 
                            th:href="@{/instructor/courses}" 
-                           class="hover:text-primary-600 dark:hover:text-primary-400">My Courses</a>
+                           class="block hover:text-primary-600 dark:hover:text-primary-400">My Courses</a>
                         
                         <a sec:authorize="hasAuthority('LEARNER')" 
                            th:href="@{/learner/enrollments}" 
-                           class="hover:text-primary-600 dark:hover:text-primary-400">My Enrollments</a>
+                           class="block hover:text-primary-600 dark:hover:text-primary-400">My Enrollments</a>
                         
                         <hr class="my-2 border-gray-200 dark:border-gray-700">
                         
@@ -453,11 +453,11 @@
                         <div class="flex flex-col md:flex-row justify-between items-center">
                             <div class="text-center md:text-left mb-4 md:mb-0">
                                 <p class="text-gray-600 dark:text-gray-400">
-                                    &copy; 2025 <span class="font-semibold text-primary-600 dark:text-primary-400">ETMS</span>. 
-                                    Employment Training Management System.
+                                    &copy; 2025 <span class="font-semibold text-primary-600 dark:text-primary-400">ActivWork</span>. 
+                                    Training Portal for Career Development.
                                 </p>
                                 <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                                    Demonstrating Layered Architecture, MVC, and GRASP Patterns
+                                    Empowering IT Professionals with Quality Training
                                 </p>
                             </div>
                             
@@ -489,11 +489,11 @@
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="text-center md:text-left mb-4 md:mb-0">
                     <p class="text-gray-600 dark:text-gray-400">
-                        &copy; 2025 <span class="font-semibold text-primary-600 dark:text-primary-400">ETMS</span>. 
-                        Employment Training Management System.
+                        &copy; 2025 <span class="font-semibold text-primary-600 dark:text-primary-400">ActivWork</span>. 
+                        Training Portal for Career Development.
                     </p>
                     <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                        Demonstrating Layered Architecture, MVC, and GRASP Patterns
+                        Empowering IT Professionals with Quality Training
                     </p>
                 </div>
                 

@@ -29,10 +29,8 @@ public class CourseResponseDto {
     private String instructorName;
     
     private CourseCategory category;
-    private DifficultyLevel difficultyLevel;
+    private String categoryDisplayName;
     private Integer durationHours;
-    private Integer maxEnrollments;
-    private BigDecimal price;
     private CourseStatus status;
     
     private String thumbnailUrl;
@@ -42,9 +40,7 @@ public class CourseResponseDto {
     private List<String> learningObjectives;
     private List<String> tags;
     
-    private ZonedDateTime startDate;
     private ZonedDateTime endDate;
-    private ZonedDateTime enrollmentDeadline;
     
     private Boolean isFeatured;
     private Boolean isActive;
@@ -76,10 +72,8 @@ public class CourseResponseDto {
         }
         
         dto.setCategory(course.getCategory());
-        dto.setDifficultyLevel(course.getDifficultyLevel());
+        dto.setCategoryDisplayName(course.getCategory().getDisplayName());
         dto.setDurationHours(course.getDurationHours());
-        dto.setMaxEnrollments(course.getMaxEnrollments());
-        dto.setPrice(course.getPrice());
         dto.setStatus(course.getStatus());
         
         dto.setThumbnailUrl(course.getThumbnailUrl());
@@ -89,9 +83,7 @@ public class CourseResponseDto {
         dto.setLearningObjectives(course.getLearningObjectives());
         dto.setTags(course.getTags());
         
-        dto.setStartDate(course.getStartDate());
         dto.setEndDate(course.getEndDate());
-        dto.setEnrollmentDeadline(course.getEnrollmentDeadline());
         
         dto.setIsFeatured(course.getIsFeatured());
         dto.setIsActive(course.getIsActive());

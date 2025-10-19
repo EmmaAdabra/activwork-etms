@@ -54,10 +54,6 @@ public class Course {
     @Column(nullable = false, length = 50)
     private CourseCategory category;
 
-    @NotNull(message = "Difficulty level is required")
-    @Enumerated(EnumType.STRING)
-    @Column(name = "difficulty_level", nullable = false, length = 50)
-    private DifficultyLevel difficultyLevel;
 
     @NotNull(message = "Duration is required")
     @Min(value = 1, message = "Duration must be at least 1 hour")
@@ -65,15 +61,6 @@ public class Course {
     @Column(name = "duration_hours", nullable = false)
     private Integer durationHours;
 
-    @NotNull(message = "Max enrollments is required")
-    @Min(value = 1, message = "Max enrollments must be at least 1")
-    @Max(value = 100, message = "Max enrollments must not exceed 100")
-    @Column(name = "max_enrollments", nullable = false)
-    private Integer maxEnrollments;
-
-    @DecimalMin(value = "0.0", message = "Price must be non-negative")
-    @Column(precision = 10, scale = 2)
-    private BigDecimal price = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 50)
@@ -95,14 +82,8 @@ public class Course {
     @Column(columnDefinition = "TEXT[]")
     private List<String> tags = new ArrayList<>();
 
-    @Column(name = "start_date")
-    private ZonedDateTime startDate;
-
     @Column(name = "end_date")
     private ZonedDateTime endDate;
-
-    @Column(name = "enrollment_deadline")
-    private ZonedDateTime enrollmentDeadline;
 
     @Column(name = "is_featured")
     private Boolean isFeatured = false;
@@ -196,18 +177,9 @@ public class Course {
      */
     public boolean isAvailableForEnrollment() {
         return CourseStatus.PUBLISHED.equals(this.status) && 
-               Boolean.TRUE.equals(this.isActive) &&
-               this.enrollmentCount < this.maxEnrollments;
+               Boolean.TRUE.equals(this.isActive);
     }
 
-    /**
-     * Check if enrollment deadline has passed
-     * @return true if enrollment deadline is in the past
-     */
-    public boolean isEnrollmentDeadlinePassed() {
-        return this.enrollmentDeadline != null && 
-               ZonedDateTime.now().isAfter(this.enrollmentDeadline);
-    }
 
     /**
      * Increment view count

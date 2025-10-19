@@ -25,9 +25,8 @@ public class CourseListDto {
     private String instructorName;
     
     private CourseCategory category;
-    private DifficultyLevel difficultyLevel;
+    private String categoryDisplayName;
     private Integer durationHours;
-    private BigDecimal price;
     private CourseStatus status;
     
     private String thumbnailUrl;
@@ -54,9 +53,8 @@ public class CourseListDto {
         }
         
         dto.setCategory(course.getCategory());
-        dto.setDifficultyLevel(course.getDifficultyLevel());
+        dto.setCategoryDisplayName(course.getCategory().getDisplayName());
         dto.setDurationHours(course.getDurationHours());
-        dto.setPrice(course.getPrice());
         dto.setStatus(course.getStatus());
         
         dto.setThumbnailUrl(course.getThumbnailUrl());

@@ -71,19 +71,14 @@ public class CourseService {
         course.setDescription(courseCreateDto.getDescription());
         course.setInstructor(instructor);
         course.setCategory(courseCreateDto.getCategory());
-        course.setDifficultyLevel(courseCreateDto.getDifficultyLevel());
         course.setDurationHours(courseCreateDto.getDurationHours());
-        course.setMaxEnrollments(courseCreateDto.getMaxEnrollments());
-        course.setPrice(courseCreateDto.getPrice());
         course.setStatus(CourseStatus.DRAFT); // Always start as draft
         course.setThumbnailUrl(courseCreateDto.getThumbnailUrl());
         course.setVideoPreviewUrl(courseCreateDto.getVideoPreviewUrl());
         course.setPrerequisites(courseCreateDto.getPrerequisites());
         course.setLearningObjectives(courseCreateDto.getLearningObjectives());
         course.setTags(courseCreateDto.getTags());
-        course.setStartDate(courseCreateDto.getStartDate());
         course.setEndDate(courseCreateDto.getEndDate());
-        course.setEnrollmentDeadline(courseCreateDto.getEnrollmentDeadline());
         course.setIsActive(true);
         course.setIsFeatured(false);
         
@@ -128,17 +123,8 @@ public class CourseService {
         if (courseUpdateDto.getCategory() != null) {
             course.setCategory(courseUpdateDto.getCategory());
         }
-        if (courseUpdateDto.getDifficultyLevel() != null) {
-            course.setDifficultyLevel(courseUpdateDto.getDifficultyLevel());
-        }
         if (courseUpdateDto.getDurationHours() != null) {
             course.setDurationHours(courseUpdateDto.getDurationHours());
-        }
-        if (courseUpdateDto.getMaxEnrollments() != null) {
-            course.setMaxEnrollments(courseUpdateDto.getMaxEnrollments());
-        }
-        if (courseUpdateDto.getPrice() != null) {
-            course.setPrice(courseUpdateDto.getPrice());
         }
         if (courseUpdateDto.getStatus() != null) {
             course.setStatus(courseUpdateDto.getStatus());
@@ -158,14 +144,8 @@ public class CourseService {
         if (courseUpdateDto.getTags() != null) {
             course.setTags(courseUpdateDto.getTags());
         }
-        if (courseUpdateDto.getStartDate() != null) {
-            course.setStartDate(courseUpdateDto.getStartDate());
-        }
         if (courseUpdateDto.getEndDate() != null) {
             course.setEndDate(courseUpdateDto.getEndDate());
-        }
-        if (courseUpdateDto.getEnrollmentDeadline() != null) {
-            course.setEnrollmentDeadline(courseUpdateDto.getEnrollmentDeadline());
         }
         if (courseUpdateDto.getIsFeatured() != null) {
             course.setIsFeatured(courseUpdateDto.getIsFeatured());
@@ -309,18 +289,6 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get courses by difficulty level.
-     * 
-     * @param difficultyLevel the difficulty level
-     * @return list of courses with the specified difficulty
-     */
-    public List<CourseListDto> getCoursesByDifficulty(DifficultyLevel difficultyLevel) {
-        List<Course> courses = courseRepository.findByDifficultyLevel(difficultyLevel);
-        return courses.stream()
-                .map(CourseListDto::fromEntity)
-                .collect(Collectors.toList());
-    }
 
     /**
      * Get featured courses.

@@ -6,6 +6,51 @@
     <title>Edit Course - ETMS</title>
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <style>
+        /* Custom scrollbar styling for text areas */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        textarea::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        
+        textarea::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+        
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Dark mode scrollbar */
+        .dark textarea::-webkit-scrollbar-track {
+            background: #374151;
+        }
+        
+        .dark textarea::-webkit-scrollbar-thumb {
+            background: #6b7280;
+        }
+        
+        .dark textarea::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+        
+        /* Firefox scrollbar styling */
+        textarea {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+        
+        .dark textarea {
+            scrollbar-color: #6b7280 #374151;
+        }
+    </style>
 </head>
 <body>
 <div layout:fragment="content">
@@ -110,7 +155,7 @@
                            id="bannerFile" 
                            name="bannerFile"
                            accept="image/*"
-                           class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-900 dark:file:text-primary-300"
+                           class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-900 dark:file:text-primary-300 cursor-pointer"
                            onchange="previewBannerEdit(event)">
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         Upload a new image to replace the current banner (JPG, PNG, max 5MB). Recommended size: 1200x630px
@@ -123,82 +168,92 @@
                     </div>
                 </div>
                 
-                <!-- Category and Difficulty Row -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Category -->
-                    <div>
-                        <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Category
-                        </label>
-                        <select id="category" 
-                                th:field="*{category}" 
-                                class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option th:value="${course.category}" 
-                                    th:text="${course.category}" 
-                                    selected>Current Category</option>
-                            <option th:each="cat : ${T(com.activwork.etms.model.CourseCategory).values()}" 
-                                    th:value="${cat}" 
-                                    th:text="${cat}">
-                            </option>
-                        </select>
-                        <p th:if="${#fields.hasErrors('category')}" 
-                           th:errors="*{category}" 
-                           class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
-                    </div>
-                    
-                    <!-- Difficulty Level -->
-                    <div>
-                        <label for="difficultyLevel" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Difficulty Level
-                        </label>
-                        <select id="difficultyLevel" 
-                                th:field="*{difficultyLevel}" 
-                                class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option th:value="${course.difficultyLevel}" 
-                                    th:text="${course.difficultyLevel}" 
-                                    selected>Current Difficulty</option>
-                            <option th:each="diff : ${T(com.activwork.etms.model.DifficultyLevel).values()}" 
-                                    th:value="${diff}" 
-                                    th:text="${diff}">
-                            </option>
-                        </select>
-                        <p th:if="${#fields.hasErrors('difficultyLevel')}" 
-                           th:errors="*{difficultyLevel}" 
-                           class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
-                    </div>
+                <!-- Category -->
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Category
+                    </label>
+                    <select id="category" 
+                            th:field="*{category}" 
+                            class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <option th:value="${course.category}" 
+                                th:text="${course.category.getDisplayName()}" 
+                                selected>Current Category</option>
+                        <option th:each="cat : ${T(com.activwork.etms.model.CourseCategory).values()}" 
+                                th:value="${cat}" 
+                                th:text="${cat.getDisplayName()}">
+                        </option>
+                    </select>
+                    <p th:if="${#fields.hasErrors('category')}" 
+                       th:errors="*{category}" 
+                       class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
                 </div>
                 
-                <!-- Duration and Max Enrollments -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Duration -->
-                    <div>
-                        <label for="durationHours" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Duration (Hours)
-                        </label>
-                        <input type="number" 
-                               id="durationHours" 
-                               th:field="*{durationHours}" 
-                               min="1"
-                               class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <p th:if="${#fields.hasErrors('durationHours')}" 
-                           th:errors="*{durationHours}" 
-                           class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                <!-- Duration -->
+                <div>
+                    <label for="durationHours" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Duration (Hours)
+                    </label>
+                    <input type="number" 
+                           id="durationHours" 
+                           th:field="*{durationHours}" 
+                           min="1"
+                           class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <p th:if="${#fields.hasErrors('durationHours')}" 
+                       th:errors="*{durationHours}" 
+                       class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                </div>
+                
+                <!-- Learning Objectives -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Learning Objectives
+                    </label>
+                    <div id="learningObjectivesContainer" class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <input type="text" 
+                                   name="learningObjectives" 
+                                   placeholder="Enter a learning objective"
+                                   class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                   onkeypress="handleEnterKey(event, 'learningObjectives')">
+                            <button type="button" 
+                                    onclick="removeField(this)" 
+                                    class="px-3 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition hidden remove-btn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
                     </div>
-                    
-                    <!-- Max Enrollments -->
-                    <div>
-                        <label for="maxEnrollments" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Maximum Enrollments
-                        </label>
-                        <input type="number" 
-                               id="maxEnrollments" 
-                               th:field="*{maxEnrollments}" 
-                               min="1"
-                               class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <p th:if="${#fields.hasErrors('maxEnrollments')}" 
-                           th:errors="*{maxEnrollments}" 
-                           class="mt-1 text-sm text-red-600 dark:text-red-400"></p>
+                    <button type="button" 
+                            onclick="addField('learningObjectives')" 
+                            class="mt-3 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                        <i class="fas fa-plus mr-2"></i>Add Objective
+                    </button>
+                </div>
+                
+                <!-- Prerequisites -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Prerequisites
+                    </label>
+                    <div id="prerequisitesContainer" class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <input type="text" 
+                                   name="prerequisites" 
+                                   placeholder="Enter a prerequisite"
+                                   class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                   onkeypress="handleEnterKey(event, 'prerequisites')">
+                            <button type="button" 
+                                    onclick="removeField(this)" 
+                                    class="px-3 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition hidden remove-btn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
                     </div>
+                    <button type="button" 
+                            onclick="addField('prerequisites')" 
+                            class="mt-3 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                        <i class="fas fa-plus mr-2"></i>Add Prerequisite
+                    </button>
                 </div>
             </div>
         </div>
@@ -267,7 +322,7 @@
                                id="materialFile" 
                                name="materialFile"
                                required
-                               class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-900 dark:file:text-primary-300">
+                               class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-900 dark:file:text-primary-300 cursor-pointer">
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                             PDF, Video, Documents, etc. (Max 50MB)
                         </p>
@@ -322,7 +377,7 @@
                 </div>
                 
                 <!-- Options -->
-                <div class="flex gap-6">
+                <!-- <div class="flex gap-6">
                     <label class="flex items-center">
                         <input type="checkbox" 
                                name="isRequired" 
@@ -343,7 +398,7 @@
                             Downloadable
                         </span>
                     </label>
-                </div>
+                </div> -->
                 
                 <!-- Submit Button -->
                 <button type="submit" 
@@ -594,6 +649,127 @@
             loadSections();
             loadMaterials();
         });
+
+        // Dynamic field management for Learning Objectives and Prerequisites
+        function addField(fieldType) {
+            const container = document.getElementById(fieldType + 'Container');
+            const fieldCount = container.children.length;
+            
+            // Create new field wrapper
+            const fieldWrapper = document.createElement('div');
+            fieldWrapper.className = 'flex items-center gap-3';
+            
+            // Create input field
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = fieldType;
+            input.placeholder = fieldType === 'learningObjectives' ? 'Enter a learning objective' : 'Enter a prerequisite';
+            input.className = 'flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500';
+            input.onkeypress = function(e) { handleEnterKey(e, fieldType); };
+            
+            // Create remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.onclick = function() { removeField(this); };
+            removeBtn.className = 'px-3 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            
+            // Append elements
+            fieldWrapper.appendChild(input);
+            fieldWrapper.appendChild(removeBtn);
+            container.appendChild(fieldWrapper);
+            
+            // Show remove buttons if more than one field
+            updateRemoveButtons(fieldType);
+            
+            // Focus on the new input
+            input.focus();
+        }
+
+        function removeField(button) {
+            const fieldWrapper = button.parentElement;
+            const container = fieldWrapper.parentElement;
+            const fieldType = fieldWrapper.querySelector('input').name;
+            
+            // Don't remove if it's the last field
+            if (container.children.length > 1) {
+                fieldWrapper.remove();
+                updateRemoveButtons(fieldType);
+            }
+        }
+
+        function updateRemoveButtons(fieldType) {
+            const container = document.getElementById(fieldType + 'Container');
+            const removeButtons = container.querySelectorAll('.remove-btn');
+            
+            // Show remove buttons only if there's more than one field
+            removeButtons.forEach(btn => {
+                if (container.children.length > 1) {
+                    btn.classList.remove('hidden');
+                } else {
+                    btn.classList.add('hidden');
+                }
+            });
+        }
+
+        function handleEnterKey(event, fieldType) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addField(fieldType);
+            }
+        }
+
+        // Initialize remove button visibility on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateRemoveButtons('learningObjectives');
+            updateRemoveButtons('prerequisites');
+            
+            // Populate existing learning objectives
+            const learningObjectives = /*[[${course.learningObjectives}]]*/ [];
+            if (learningObjectives && learningObjectives.length > 0) {
+                populateFields('learningObjectives', learningObjectives);
+            }
+            
+            // Populate existing prerequisites
+            const prerequisites = /*[[${course.prerequisites}]]*/ [];
+            if (prerequisites && prerequisites.length > 0) {
+                populateFields('prerequisites', prerequisites);
+            }
+        });
+
+        function populateFields(fieldType, values) {
+            const container = document.getElementById(fieldType + 'Container');
+            
+            // Clear existing fields
+            container.innerHTML = '';
+            
+            // Add fields for each value
+            values.forEach((value, index) => {
+                const fieldWrapper = document.createElement('div');
+                fieldWrapper.className = 'flex items-center gap-3';
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.name = fieldType;
+                input.value = value;
+                input.placeholder = fieldType === 'learningObjectives' ? 'Enter a learning objective' : 'Enter a prerequisite';
+                input.className = 'flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500';
+                input.onkeypress = function(e) { handleEnterKey(e, fieldType); };
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.onclick = function() { removeField(this); };
+                removeBtn.className = 'px-3 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition remove-btn';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                
+                fieldWrapper.appendChild(input);
+                fieldWrapper.appendChild(removeBtn);
+                container.appendChild(fieldWrapper);
+            });
+            
+            // Update remove button visibility
+            updateRemoveButtons(fieldType);
+        }
     </script>
     
     <!-- Add/Edit Section Modal -->
@@ -766,7 +942,7 @@
                             </button>
                             <button onclick="deleteSection('${section.id}')" 
                                     class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition">
-                                <i class="fas fa-trash"></i>
+                                <i class="fas fa-times"></i>
                             </button>
                         </div>
                     </div>
@@ -1141,11 +1317,11 @@
                     </div>
                     <div class="flex items-center space-x-2">
                         <a href="${material.path}" target="_blank"
-                           class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition">
+                           class="px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition">
                             <i class="fas fa-eye mr-1"></i>View
                         </a>
                         <button onclick="deleteMaterialConfirm('${material.id}')"
-                                class="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
+                                class="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
                             <i class="fas fa-trash mr-1"></i>Delete
                         </button>
                     </div>

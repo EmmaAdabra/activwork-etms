@@ -3,7 +3,6 @@ package com.activwork.etms.repository;
 import com.activwork.etms.model.Course;
 import com.activwork.etms.model.CourseCategory;
 import com.activwork.etms.model.CourseStatus;
-import com.activwork.etms.model.DifficultyLevel;
 import com.activwork.etms.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -54,13 +53,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
      */
     List<Course> findByStatus(CourseStatus status);
 
-    /**
-     * Find all courses by difficulty level.
-     * 
-     * @param difficultyLevel the difficulty level
-     * @return list of courses with the specified difficulty
-     */
-    List<Course> findByDifficultyLevel(DifficultyLevel difficultyLevel);
 
     /**
      * Find all active courses.
@@ -95,14 +87,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
     @Query("SELECT c FROM Course c WHERE LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Course> searchByTitle(@Param("keyword") String keyword);
 
-    /**
-     * Find courses by category and difficulty level.
-     * 
-     * @param category the course category
-     * @param difficultyLevel the difficulty level
-     * @return list of matching courses
-     */
-    List<Course> findByCategoryAndDifficultyLevel(CourseCategory category, DifficultyLevel difficultyLevel);
 
     /**
      * Find published courses by instructor.

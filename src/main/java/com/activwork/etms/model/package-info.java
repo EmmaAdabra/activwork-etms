@@ -21,7 +21,6 @@
  * Enums (7):
  * - UserRole: INSTRUCTOR, LEARNER
  * - CourseCategory: 10 categories for course classification
- * - DifficultyLevel: BEGINNER, INTERMEDIATE, ADVANCED, EXPERT
  * - EnrollmentStatus: ACTIVE, COMPLETED, CANCELLED, SUSPENDED
  * - MaterialType: 10 types (VIDEO, PDF, DOCUMENT, etc.)
  * - CourseStatus: DRAFT, PUBLISHED, ARCHIVED, SUSPENDED

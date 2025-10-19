@@ -27,9 +27,7 @@ import java.util.stream.Collectors;
  * 1. Only learners can enroll in courses
  * 2. Cannot enroll in the same course twice
  * 3. Course must be published and active
- * 4. Enrollment capacity must not be exceeded
- * 5. Enrollment deadline must not have passed
- * 6. Prerequisites must be met (if applicable)
+ * 4. Prerequisites must be met (if applicable)
  * 
  * Architecture:
  * - Uses multiple repositories (Enrollment, Course, User, MaterialProgress)
@@ -84,11 +82,6 @@ public class EnrollmentService {
         // Business rule: Course must be available for enrollment
         if (!course.isAvailableForEnrollment()) {
             throw new IllegalArgumentException("Course is not available for enrollment");
-        }
-        
-        // Business rule: Enrollment deadline must not have passed
-        if (course.isEnrollmentDeadlinePassed()) {
-            throw new IllegalArgumentException("Enrollment deadline has passed");
         }
         
         // Create enrollment

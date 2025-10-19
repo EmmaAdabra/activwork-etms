@@ -4,7 +4,7 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout}">
 <head>
-    <title th:text="${course.title} + ' - ETMS'">Course Details - ETMS</title>
+    <title th:text="${course.title} + ' - ActivWork Training Portal'">Course Details - ActivWork Training Portal</title>
 </head>
 <body>
 <div layout:fragment="content">
@@ -17,19 +17,13 @@
                 <div class="text-primary-200 text-sm mb-4">
                     <a th:href="@{/}" class="hover:underline">Home</a> / 
                     <a th:href="@{/courses}" class="hover:underline">Courses</a> / 
-                    <span th:text="${course.category}">PROGRAMMING</span>
+                    <span th:text="${course.categoryDisplayName}">Programming</span>
                 </div>
                 
-                <!-- Category & Difficulty -->
+                <!-- Category -->
                 <div class="flex flex-wrap gap-2 mb-4">
-                    <span class="px-3 py-1 bg-white/20 rounded-full text-sm font-semibold">
-                        <span th:text="${course.category}">PROGRAMMING</span>
-                    </span>
-                    <span th:class="${course.difficultyLevel.toString() == 'BEGINNER' ? 'bg-green-500' : 
-                                     course.difficultyLevel.toString() == 'INTERMEDIATE' ? 'bg-yellow-500' : 
-                                     course.difficultyLevel.toString() == 'ADVANCED' ? 'bg-orange-500' : 'bg-red-500'}"
-                          class="px-3 py-1 rounded-full text-sm font-semibold">
-                        <span th:text="${course.difficultyLevel}">INTERMEDIATE</span>
+                    <span class="px-4 py-2 bg-white/20 rounded-full text-sm font-semibold">
+                        <span th:text="${course.categoryDisplayName}">Programming</span>
                     </span>
                 </div>
                 
@@ -57,7 +51,7 @@
                     
                     <div class="flex items-center">
                         <i class="fas fa-users mr-2"></i>
-                        <span th:text="${course.enrollmentCount ?: 0} + ' enrolled'">50 enrolled</span>
+                        <span th:text="${course.enrollmentCount ?: 0} + ' learners'">50 learners</span>
                     </div>
                     
                     <div class="flex items-center">
@@ -81,39 +75,30 @@
                 </div>
             </div>
             
-            <!-- Enrollment Card -->
+            <!-- Start Learning Card -->
             <div class="bg-white dark:bg-gray-800 rounded-lg p-6 text-gray-900 dark:text-white h-fit">
-                <h3 class="text-2xl font-bold mb-4">Enroll Now</h3>
+                <h3 class="text-2xl font-bold mb-4">Start Learning</h3>
                 
-                <!-- Price -->
+                <!-- Course Access -->
                 <div class="mb-4">
-                    <div class="text-4xl font-bold text-primary-600 dark:text-primary-400">
-                        <span th:if="${course.price == 0}">FREE</span>
-                        <span th:if="${course.price != 0}">
-                            $<span th:text="${#numbers.formatDecimal(course.price, 1, 2)}">299.99</span>
-                        </span>
+                    <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                        <span>FREE</span>
                     </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Access anytime, learn at your own pace</p>
                 </div>
                 
-                <!-- Enrollment Info -->
+                <!-- Course Info -->
                 <div class="space-y-3 mb-6 text-sm text-gray-600 dark:text-gray-400">
                     <div class="flex items-center justify-between">
-                        <span><i class="fas fa-user-friends mr-2"></i>Seats Available:</span>
-                        <strong>
-                            <span th:text="${course.maxEnrollments - (course.enrollmentCount ?: 0)}">20</span> / 
-                            <span th:text="${course.maxEnrollments}">70</span>
-                        </strong>
+                        <span><i class="fas fa-users mr-2"></i>Learners:</span>
+                        <strong th:text="${course.enrollmentCount ?: 0}">50</strong>
                     </div>
                     
                     <div class="flex items-center justify-between">
-                        <span><i class="fas fa-calendar-day mr-2"></i>Starts:</span>
-                        <strong th:text="${course.startDate != null ? #temporals.format(course.startDate, 'MMM dd, yyyy') : 'Anytime'}">Oct 15, 2025</strong>
+                        <span><i class="fas fa-clock mr-2"></i>Duration:</span>
+                        <strong th:text="${course.durationHours} + ' hours'">10 hours</strong>
                     </div>
                     
-                    <div class="flex items-center justify-between">
-                        <span><i class="fas fa-calendar-times mr-2"></i>Enrollment Deadline:</span>
-                        <strong th:text="${course.enrollmentDeadline != null ? #temporals.format(course.enrollmentDeadline, 'MMM dd') : 'N/A'}">Oct 20</strong>
-                    </div>
                 </div>
                 
                 <!-- Enroll Button (Learner Only) -->
@@ -121,7 +106,7 @@
                     <form th:action="@{/learner/courses/{id}/enroll(id=${course.id})}" method="post">
                         <button type="submit" 
                                 class="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-bold rounded-lg transition shadow-md">
-                            <i class="fas fa-check-circle mr-2"></i>Enroll in Course
+                            <i class="fas fa-play mr-2"></i>Start Learning
                         </button>
                     </form>
                 </div>
@@ -130,7 +115,7 @@
                 <div sec:authorize="!isAuthenticated()">
                     <a th:href="@{/login}" 
                        class="block w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white text-center font-bold rounded-lg transition shadow-md">
-                        <i class="fas fa-sign-in-alt mr-2"></i>Login to Enroll
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login to Start Learning
                     </a>
                     <p class="text-center text-sm text-gray-600 dark:text-gray-400 mt-3">
                         Don't have an account? <a th:href="@{/register}" class="text-primary-600 dark:text-primary-400 hover:underline">Sign up</a>
@@ -139,10 +124,10 @@
                 
                 <!-- Instructor Message -->
                 <div sec:authorize="hasAuthority('INSTRUCTOR')">
-                    <p class="text-center text-gray-600 dark:text-gray-400 text-sm">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Only learners can enroll in courses
-                    </p>
+                      <p class="text-center text-gray-600 dark:text-gray-400 text-sm">
+                          <i class="fas fa-info-circle mr-1"></i>
+                          Only candidates can access training programs
+                      </p>
                 </div>
             </div>
         </div>
@@ -194,6 +179,63 @@
                     </li>
                 </ul>
             </div>
+            
+            <!-- Course Ratings & Reviews -->
+            <div th:if="${feedback != null and !feedback.empty}" 
+                 class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                    <i class="fas fa-star mr-2"></i>Candidate Reviews
+                </h2>
+                
+                <!-- Reviews List -->
+                <div class="space-y-6">
+                    <div th:each="review : ${feedback}" 
+                         class="border-b border-gray-200 dark:border-gray-700 pb-6 last:border-b-0 last:pb-0">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center">
+                                <!-- Learner Avatar -->
+                                <div class="w-10 h-10 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-user text-primary-600 dark:text-primary-400"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 dark:text-white" th:text="${review.learnerName}">John Doe</h4>
+                                    <div class="flex items-center">
+                                        <!-- Star Rating -->
+                                        <div class="flex text-yellow-400 text-sm mr-2">
+                                            <i th:each="i : ${#numbers.sequence(1, 5)}" 
+                                               th:class="${i <= review.rating} ? 'fas fa-star' : 'far fa-star'"></i>
+                                        </div>
+                                        <span class="text-sm text-gray-500 dark:text-gray-400" 
+                                              th:text="${#temporals.format(review.createdAt, 'MMM dd, yyyy')}">Oct 15, 2025</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Review Comment -->
+                        <p class="text-gray-700 dark:text-gray-300 leading-relaxed" th:text="${review.comment}">
+                            This course was amazing! I learned so much about Spring Boot development.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- See More Button -->
+                <div th:if="${hasMoreFeedback}" class="mt-6 text-center">
+                    <button onclick="loadMoreReviews()" 
+                            class="px-6 py-3 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-semibold rounded-lg transition">
+                        <i class="fas fa-chevron-down mr-2"></i>
+                        See More Reviews (<span th:text="${totalFeedbackCount - 5}">5</span> more)
+                    </button>
+                </div>
+                
+                <!-- No Reviews Message -->
+            <div th:if="${feedback == null or feedback.empty}" 
+                 class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <i class="fas fa-comment-slash text-4xl mb-4"></i>
+                <p class="text-lg">No reviews yet</p>
+                <p class="text-sm">Be the first candidate to review this course!</p>
+            </div>
+            </div>
         </div>
         
         <!-- Sidebar -->
@@ -239,7 +281,7 @@
                 </h3>
                 <div class="flex flex-wrap gap-2">
                     <span th:each="tag : ${course.tags}" 
-                          class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-full">
+                          class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-full">
                         <span th:text="${tag}">Spring</span>
                     </span>
                 </div>
@@ -265,6 +307,16 @@
         </div>
     </div>
 </div>
+
+<script>
+// Load more reviews functionality
+function loadMoreReviews() {
+    // For now, we'll just show an alert. In a real implementation,
+    // this would make an AJAX call to load more reviews
+    alert('This feature will load more reviews. For now, all reviews are shown above.');
+}
+</script>
+
 </body>
 </html>
 

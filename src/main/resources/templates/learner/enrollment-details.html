@@ -3,7 +3,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <title>Enrollment Details - ETMS</title>
+    <title>Enrollment Details - ActivWork Training Portal</title>
 </head>
 <body>
 <div layout:fragment="content">
@@ -25,13 +25,12 @@
                 <!-- Status Badge -->
                 <div class="inline-flex items-center gap-2 mb-4">
                     <span th:class="${enrollment.status.toString() == 'ACTIVE' ? 'bg-green-500' : 
-                                     enrollment.status.toString() == 'COMPLETED' ? 'bg-blue-500' : 'bg-gray-500'}"
-                          class="px-3 py-1 text-white text-sm font-semibold rounded-full">
+                                     enrollment.status.toString() == 'COMPLETED' ? 'bg-blue-500' : 'bg-gray-500'} + ' px-4 py-2 text-white text-sm font-semibold rounded-full'">
                         <i th:class="${enrollment.status.toString() == 'COMPLETED' ? 'fas fa-check-circle' : 'fas fa-clock'}" class="mr-1"></i>
                         <span th:text="${enrollment.status}">ACTIVE</span>
                     </span>
                     
-                    <span th:if="${enrollment.certificateIssued}" class="px-3 py-1 bg-yellow-500 text-white text-sm font-semibold rounded-full">
+                    <span th:if="${enrollment.certificateIssued}" class="px-4 py-2 bg-yellow-500 text-white text-sm font-semibold rounded-full">
                         <i class="fas fa-certificate mr-1"></i>Certificate Earned
                     </span>
                 </div>
@@ -235,6 +234,20 @@
                                 
                                 <!-- Non-Video: Open Button + Completion Checkbox -->
                                 <div th:if="${material.materialType.toString() != 'VIDEO'}" class="flex items-center gap-3">
+                                     <!-- Mark as Complete Checkbox (hidden initially, shown by JS if not completed) -->
+                                     <label class="flex items-center gap-2 cursor-pointer group" 
+                                     th:id="'completion-label-' + ${material.id}"
+                                     th:data-material-id="${material.id}">
+                                  <input type="checkbox"
+                                         th:id="'complete-' + ${material.id}"
+                                         th:data-material-id="${material.id}"
+                                         th:data-enrollment-id="${enrollment.id}"
+                                         onchange="markMaterialComplete(this)"
+                                         class="w-5 h-5 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer">
+                                  <span class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200">
+                                      Mark complete
+                                  </span>
+                              </label>
                                     <a th:href="@{/learner/materials/{id}/view(id=${material.id})}"
                                        target="_blank"
                                        rel="noopener noreferrer"
@@ -242,21 +255,6 @@
                                         <i class="fas fa-external-link-alt mr-1"></i>
                                         <span>Open</span>
                                     </a>
-                                    
-                                    <!-- Mark as Complete Checkbox (hidden initially, shown by JS if not completed) -->
-                                    <label class="flex items-center gap-2 cursor-pointer group" 
-                                           th:id="'completion-label-' + ${material.id}"
-                                           th:data-material-id="${material.id}">
-                                        <input type="checkbox"
-                                               th:id="'complete-' + ${material.id}"
-                                               th:data-material-id="${material.id}"
-                                               th:data-enrollment-id="${enrollment.id}"
-                                               onchange="markMaterialComplete(this)"
-                                               class="w-5 h-5 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer">
-                                        <span class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200">
-                                            Mark complete
-                                        </span>
-                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -365,14 +363,6 @@
                             
                             <!-- Non-Video: Open Button + Completion Checkbox -->
                             <div th:if="${material.materialType.toString() != 'VIDEO'}" class="flex items-center gap-3">
-                                <a th:href="@{/learner/materials/{id}/view(id=${material.id})}" 
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
-                                    <i class="fas fa-external-link-alt mr-1"></i>
-                                    <span>Open</span>
-                                </a>
-                                
                                 <!-- Mark as Complete Checkbox (hidden initially, shown by JS if not completed) -->
                                 <label class="flex items-center gap-2 cursor-pointer group" 
                                        th:id="'completion-label-' + ${material.id}"
@@ -387,6 +377,13 @@
                                         Mark complete
                                     </span>
                                 </label>
+                                <a th:href="@{/learner/materials/{id}/view(id=${material.id})}" 
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                                    <i class="fas fa-external-link-alt mr-1"></i>
+                                    <span>Open</span>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -624,7 +621,7 @@ async function loadMaterialProgress(materialId) {
                 const videoTitle = document.getElementById('videoTitle');
                 if (videoTitle && !videoTitle.querySelector('.completed-badge')) {
                     const badge = document.createElement('span');
-                    badge.className = 'completed-badge ml-3 px-3 py-1 bg-green-500 text-white text-sm rounded-full';
+                    badge.className = 'completed-badge ml-3 px-4 py-2 bg-green-500 text-white text-sm rounded-full';
                     badge.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Completed';
                     videoTitle.appendChild(badge);
                 }

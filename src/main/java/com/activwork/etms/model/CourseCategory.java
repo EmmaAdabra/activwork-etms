@@ -2,57 +2,102 @@ package com.activwork.etms.model;
 
 /**
  * Course category enum matching PostgreSQL course_category type.
- * Categorizes courses into different IT domains.
+ * Categorizes courses into technical, business, professional, and personal development domains.
  */
 public enum CourseCategory {
+    // Technical - Development & Engineering
     /**
-     * Programming languages and fundamentals
+     * Programming languages, algorithms, coding fundamentals
      */
-    PROGRAMMING,
+    PROGRAMMING("Programming"),
     
     /**
-     * Web development technologies (frontend and backend)
+     * Web development, desktop apps, full-stack development, APIs
      */
-    WEB_DEVELOPMENT,
+    SOFTWARE_DEVELOPMENT("Software Development"),
     
     /**
-     * Database design, SQL, and NoSQL technologies
+     * iOS, Android, cross-platform mobile apps
      */
-    DATABASE,
+    MOBILE_DEVELOPMENT("Mobile Development"),
     
     /**
-     * DevOps practices, CI/CD, containerization
+     * Database design, SQL, NoSQL, data modeling
      */
-    DEVOPS,
+    DATABASE_MANAGEMENT("Database Management"),
     
     /**
-     * Cybersecurity, penetration testing, security protocols
+     * User interface design, user experience, prototyping, design tools
      */
-    CYBERSECURITY,
+    UI_UX_DESIGN("UI/UX Design"),
     
     /**
-     * Data science, machine learning, analytics
+     * Software testing, QA, test automation, quality engineering
      */
-    DATA_SCIENCE,
+    QUALITY_ASSURANCE("Quality Assurance"),
+    
+    // Technical - Infrastructure & Data
+    /**
+     * Cloud computing (AWS, Azure, GCP), CI/CD, containerization, infrastructure automation
+     */
+    CLOUD_DEVOPS("Cloud & DevOps"),
     
     /**
-     * Mobile app development (iOS, Android, cross-platform)
+     * Security, penetration testing, ethical hacking, security protocols
      */
-    MOBILE_DEVELOPMENT,
+    CYBERSECURITY("Cybersecurity"),
     
     /**
-     * Cloud computing platforms and services
+     * Machine learning, artificial intelligence, data science, analytics, deep learning
      */
-    CLOUD_COMPUTING,
+    DATA_SCIENCE_AI("Data Science & AI"),
     
     /**
-     * Software testing, QA, test automation
+     * Network infrastructure, system administration, IT support, helpdesk
      */
-    SOFTWARE_TESTING,
+    IT_NETWORK_ADMIN("IT & Network Administration"),
+    
+    // Business & Management
+    /**
+     * Project management, product management, Agile, Scrum, Kanban
+     */
+    PROJECT_PRODUCT_MANAGEMENT("Project & Product Management"),
     
     /**
-     * Project management methodologies and tools
+     * Business analysis, entrepreneurship, business strategy, startups
      */
-    PROJECT_MANAGEMENT
+    BUSINESS_ENTREPRENEURSHIP("Business & Entrepreneurship"),
+    
+    /**
+     * Team leadership, people management, organizational development
+     */
+    LEADERSHIP_MANAGEMENT("Leadership & Management"),
+    
+    // Professional & Personal Development
+    /**
+     * Communication, presentation, technical writing, soft skills, career development
+     */
+    PROFESSIONAL_SKILLS("Professional Skills"),
+    
+    /**
+     * Time management, productivity, emotional intelligence, mental health, stress management, work-life balance
+     */
+    PERSONAL_DEVELOPMENT_WELLNESS("Personal Development & Wellness"),
+    
+    // General
+    /**
+     * Miscellaneous courses and emerging topics
+     */
+    OTHERS("Others");
+
+    private final String displayName;
+
+    CourseCategory(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
 }
 

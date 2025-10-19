@@ -3,7 +3,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <title>Submit Feedback - ETMS</title>
+    <title>Submit Feedback - ActivWork Training Portal</title>
 </head>
 <body>
 <div layout:fragment="content">
@@ -34,8 +34,7 @@
                 </p>
                 <p class="text-gray-600 dark:text-gray-400">
                     <i class="fas fa-tag mr-1"></i>
-                    <span th:text="${course.category}">PROGRAMMING</span> • 
-                    <span th:text="${course.difficultyLevel}">INTERMEDIATE</span>
+                    <span th:text="${course.categoryDisplayName}">Programming</span>
                 </p>
             </div>
         </div>

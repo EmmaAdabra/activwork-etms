@@ -1,10 +1,11 @@
 package com.activwork.etms.controller;
 
 import com.activwork.etms.dto.CourseListDto;
+import com.activwork.etms.dto.FeedbackResponseDto;
 import com.activwork.etms.model.CourseCategory;
-import com.activwork.etms.model.DifficultyLevel;
 import com.activwork.etms.security.CustomUserDetailsService;
 import com.activwork.etms.service.CourseService;
+import com.activwork.etms.service.FeedbackService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Controller for public home and course browsing pages.
@@ -39,6 +41,7 @@ public class HomeController {
 
     private final CourseService courseService;
     private final CustomUserDetailsService customUserDetailsService;
+    private final FeedbackService feedbackService;
 
     /**
      * Display homepage.
@@ -70,33 +73,27 @@ public class HomeController {
      * Browse all available courses.
      * 
      * @param category optional category filter
-     * @param difficulty optional difficulty filter
      * @param model the model for view
      * @return courses browse view name
      */
     @GetMapping("/courses")
     public String browseCourses(
             @RequestParam(required = false) CourseCategory category,
-            @RequestParam(required = false) DifficultyLevel difficulty,
             Model model) {
         
-        log.info("Browsing courses - category: {}, difficulty: {}", category, difficulty);
+        log.info("Browsing courses - category: {}", category);
         
         List<CourseListDto> courses;
         
         if (category != null) {
             courses = courseService.getCoursesByCategory(category);
-        } else if (difficulty != null) {
-            courses = courseService.getCoursesByDifficulty(difficulty);
         } else {
             courses = courseService.getAvailableCourses();
         }
         
         model.addAttribute("courses", courses);
         model.addAttribute("categories", CourseCategory.values());
-        model.addAttribute("difficulties", DifficultyLevel.values());
         model.addAttribute("selectedCategory", category);
-        model.addAttribute("selectedDifficulty", difficulty);
         
         return "courses/browse";
     }
@@ -120,7 +117,6 @@ public class HomeController {
         model.addAttribute("courses", courses);
         model.addAttribute("keyword", keyword);
         model.addAttribute("categories", CourseCategory.values());
-        model.addAttribute("difficulties", DifficultyLevel.values());
         
         return "courses/browse";
     }
@@ -141,7 +137,16 @@ public class HomeController {
         // Increment view count
         courseService.incrementViewCount(id);
         
+        // Load course feedback (first 5 visible feedback)
+        List<FeedbackResponseDto> feedback = feedbackService.getVisibleFeedbackByCourse(id);
+        List<FeedbackResponseDto> displayedFeedback = feedback.stream()
+                .limit(5)
+                .collect(Collectors.toList());
+        
         model.addAttribute("course", course);
+        model.addAttribute("feedback", displayedFeedback);
+        model.addAttribute("totalFeedbackCount", feedback.size());
+        model.addAttribute("hasMoreFeedback", feedback.size() > 5);
         
         return "courses/details";
     }

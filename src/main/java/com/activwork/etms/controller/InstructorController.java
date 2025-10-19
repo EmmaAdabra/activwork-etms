@@ -220,18 +220,13 @@ public class InstructorController {
         courseUpdateDto.setSummary(course.getSummary());
         courseUpdateDto.setDescription(course.getDescription());
         courseUpdateDto.setCategory(course.getCategory());
-        courseUpdateDto.setDifficultyLevel(course.getDifficultyLevel());
         courseUpdateDto.setDurationHours(course.getDurationHours());
-        courseUpdateDto.setMaxEnrollments(course.getMaxEnrollments());
-        courseUpdateDto.setPrice(course.getPrice());
         courseUpdateDto.setThumbnailUrl(course.getThumbnailUrl());
         courseUpdateDto.setVideoPreviewUrl(course.getVideoPreviewUrl());
         courseUpdateDto.setPrerequisites(course.getPrerequisites());
         courseUpdateDto.setLearningObjectives(course.getLearningObjectives());
         courseUpdateDto.setTags(course.getTags());
-        courseUpdateDto.setStartDate(course.getStartDate());
         courseUpdateDto.setEndDate(course.getEndDate());
-        courseUpdateDto.setEnrollmentDeadline(course.getEnrollmentDeadline());
         courseUpdateDto.setIsFeatured(course.getIsFeatured());
         courseUpdateDto.setIsActive(course.getIsActive());
         
@@ -281,18 +276,13 @@ public class InstructorController {
             courseUpdateDto.setSummary(course.getSummary());
             courseUpdateDto.setDescription(course.getDescription());
             courseUpdateDto.setCategory(course.getCategory());
-            courseUpdateDto.setDifficultyLevel(course.getDifficultyLevel());
             courseUpdateDto.setDurationHours(course.getDurationHours());
-            courseUpdateDto.setMaxEnrollments(course.getMaxEnrollments());
-            courseUpdateDto.setPrice(course.getPrice());
             courseUpdateDto.setThumbnailUrl(course.getThumbnailUrl());
             courseUpdateDto.setVideoPreviewUrl(course.getVideoPreviewUrl());
             courseUpdateDto.setPrerequisites(course.getPrerequisites());
             courseUpdateDto.setLearningObjectives(course.getLearningObjectives());
             courseUpdateDto.setTags(course.getTags());
-            courseUpdateDto.setStartDate(course.getStartDate());
             courseUpdateDto.setEndDate(course.getEndDate());
-            courseUpdateDto.setEnrollmentDeadline(course.getEnrollmentDeadline());
             courseUpdateDto.setIsFeatured(course.getIsFeatured());
             courseUpdateDto.setIsActive(course.getIsActive());
             
@@ -323,18 +313,13 @@ public class InstructorController {
                     courseUpdateDto.setSummary(course.getSummary());
                     courseUpdateDto.setDescription(course.getDescription());
                     courseUpdateDto.setCategory(course.getCategory());
-                    courseUpdateDto.setDifficultyLevel(course.getDifficultyLevel());
                     courseUpdateDto.setDurationHours(course.getDurationHours());
-                    courseUpdateDto.setMaxEnrollments(course.getMaxEnrollments());
-                    courseUpdateDto.setPrice(course.getPrice());
                     courseUpdateDto.setThumbnailUrl(course.getThumbnailUrl());
                     courseUpdateDto.setVideoPreviewUrl(course.getVideoPreviewUrl());
                     courseUpdateDto.setPrerequisites(course.getPrerequisites());
                     courseUpdateDto.setLearningObjectives(course.getLearningObjectives());
                     courseUpdateDto.setTags(course.getTags());
-                    courseUpdateDto.setStartDate(course.getStartDate());
                     courseUpdateDto.setEndDate(course.getEndDate());
-                    courseUpdateDto.setEnrollmentDeadline(course.getEnrollmentDeadline());
                     courseUpdateDto.setIsFeatured(course.getIsFeatured());
                     courseUpdateDto.setIsActive(course.getIsActive());
                     
@@ -374,18 +359,13 @@ public class InstructorController {
             courseUpdateDto.setSummary(course.getSummary());
             courseUpdateDto.setDescription(course.getDescription());
             courseUpdateDto.setCategory(course.getCategory());
-            courseUpdateDto.setDifficultyLevel(course.getDifficultyLevel());
             courseUpdateDto.setDurationHours(course.getDurationHours());
-            courseUpdateDto.setMaxEnrollments(course.getMaxEnrollments());
-            courseUpdateDto.setPrice(course.getPrice());
             courseUpdateDto.setThumbnailUrl(course.getThumbnailUrl());
             courseUpdateDto.setVideoPreviewUrl(course.getVideoPreviewUrl());
             courseUpdateDto.setPrerequisites(course.getPrerequisites());
             courseUpdateDto.setLearningObjectives(course.getLearningObjectives());
             courseUpdateDto.setTags(course.getTags());
-            courseUpdateDto.setStartDate(course.getStartDate());
             courseUpdateDto.setEndDate(course.getEndDate());
-            courseUpdateDto.setEnrollmentDeadline(course.getEnrollmentDeadline());
             courseUpdateDto.setIsFeatured(course.getIsFeatured());
             courseUpdateDto.setIsActive(course.getIsActive());
             
