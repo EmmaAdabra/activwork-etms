@@ -6,11 +6,13 @@ import com.activwork.etms.dto.MaterialProgressUpdateDto;
 import com.activwork.etms.exception.FileStorageException;
 import com.activwork.etms.exception.ResourceNotFoundException;
 import com.activwork.etms.model.Course;
+import com.activwork.etms.model.CourseSection;
 import com.activwork.etms.model.Enrollment;
 import com.activwork.etms.model.Material;
 import com.activwork.etms.model.MaterialProgress;
 import com.activwork.etms.model.MaterialType;
 import com.activwork.etms.repository.CourseRepository;
+import com.activwork.etms.repository.CourseSectionRepository;
 import com.activwork.etms.repository.MaterialRepository;
 import com.activwork.etms.repository.MaterialProgressRepository;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +48,7 @@ public class MaterialService {
 
     private final MaterialRepository materialRepository;
     private final CourseRepository courseRepository;
+    private final CourseSectionRepository sectionRepository;
     private final MaterialProgressRepository materialProgressRepository;
     private final FileStorageService fileStorageService;
     private final EnrollmentService enrollmentService;
@@ -176,6 +179,7 @@ public class MaterialService {
      * @param isRequired whether material is required
      * @param isDownloadable whether material can be downloaded
      * @param instructorId the instructor uploading (must be course instructor)
+     * @param sectionId the section UUID to assign the material to (optional)
      * @return the created material
      * @throws ResourceNotFoundException if course not found
      * @throws IllegalArgumentException if not authorized or invalid file
@@ -189,9 +193,10 @@ public class MaterialService {
             String description,
             Boolean isRequired,
             Boolean isDownloadable,
-            UUID instructorId) {
+            UUID instructorId,
+            UUID sectionId) {
         
-        log.info("Uploading material for course: {} by instructor: {}", courseId, instructorId);
+        log.info("Uploading material for course: {} by instructor: {} to section: {}", courseId, instructorId, sectionId);
         
         // Validate file
         if (file == null || file.isEmpty()) {
@@ -205,6 +210,19 @@ public class MaterialService {
         // Business rule: Only course instructor can upload materials
         if (!course.getInstructor().getId().equals(instructorId)) {
             throw new IllegalArgumentException("Only the course instructor can upload materials");
+        }
+        
+        // Get section if provided
+        CourseSection section = null;
+        if (sectionId != null) {
+            section = sectionRepository.findById(sectionId)
+                    .orElseThrow(() -> new ResourceNotFoundException("CourseSection", sectionId));
+            
+            // Verify section belongs to the same course
+            if (!section.getCourse().getId().equals(courseId)) {
+                throw new IllegalArgumentException("Section does not belong to this course");
+            }
+            log.info("Material will be assigned to section: {}", section.getTitle());
         }
         
         // Store file
@@ -221,6 +239,7 @@ public class MaterialService {
         // Create material entity
         Material material = new Material();
         material.setCourse(course);
+        material.setSection(section);  // Assign section if provided
         material.setFilename(storedFilename);
         material.setOriginalFilename(originalFilename);
         material.setMimeType(mimeType != null ? mimeType : "application/octet-stream");
@@ -235,7 +254,8 @@ public class MaterialService {
         
         Material savedMaterial = materialRepository.save(material);
         
-        log.info("Material uploaded successfully: {} for course: {}", savedMaterial.getId(), courseId);
+        log.info("Material uploaded successfully: {} for course: {} in section: {}", 
+            savedMaterial.getId(), courseId, sectionId);
         
         return MaterialResponseDto.fromEntity(savedMaterial);
     }

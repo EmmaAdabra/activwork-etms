@@ -3,7 +3,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <title>Edit Course - ETMS</title>
+    <title>Edit Course - ActivWork Training Portal</title>
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <style>
@@ -645,9 +645,7 @@
                 showToast(errorMessage.textContent, 'error');
             }
             
-            // Load sections and materials on page load
-            loadSections();
-            loadMaterials();
+            // Load sections and materials on page load (these will be called from the section management script below)
         });
 
         // Dynamic field management for Learning Objectives and Prerequisites
@@ -846,6 +844,8 @@
                 
                 if (response.ok) {
                     sections = await response.json();
+                    console.log('📦 Loaded sections:', sections);
+                    console.log('📊 Section count:', sections.length);
                     renderSections();
                 }
             } catch (error) {
@@ -903,9 +903,11 @@
         // Render sections list
         function renderSections() {
             const sectionsList = document.getElementById('sectionsList');
+            console.log('🎨 Rendering sections. Count:', sections.length);
             updateSectionDropdown(); // Update dropdown when sections change
             
             if (sections.length === 0) {
+                console.log('⚠️ No sections to render');
                 sectionsList.innerHTML = `
                     <div class="text-center py-8 text-gray-500 dark:text-gray-400">
                         <i class="fas fa-layer-group text-4xl mb-3"></i>
@@ -1181,6 +1183,11 @@
                 
                 if (response.ok) {
                     const materials = await response.json();
+                    console.log('📦 Loaded materials:', materials);
+                    console.log('📊 Material count:', materials.length);
+                    materials.forEach(m => {
+                        console.log(`  - ${m.originalFilename} (sectionId: ${m.sectionId || 'NONE'})`);
+                    });
                     renderMaterialsGroupedBySections(materials);
                 } else {
                     document.getElementById('materialsList').innerHTML = `
@@ -1234,33 +1241,39 @@
             
             let html = '';
             
-            // Render sections with materials
+            // Render ALL sections (even if empty) - FIX for Bug #3
             sections.forEach((section, index) => {
                 const sectionMaterials = grouped.sections[section.id] || [];
-                if (sectionMaterials.length > 0) {
-                    html += `
-                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                            <div class="bg-gray-100 dark:bg-gray-700 px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition"
-                                 onclick="toggleMaterialSection('section-${section.id}')">
-                                <div class="flex items-center space-x-3">
-                                    <i class="fas fa-folder text-primary-500 text-lg section-toggle-icon" id="icon-section-${section.id}"></i>
-                                    <h4 class="font-semibold text-gray-900 dark:text-white">
-                                        Section ${index + 1}: ${escapeHtml(section.title)}
-                                    </h4>
-                                    <span class="text-sm text-gray-500 dark:text-gray-400">
-                                        (${sectionMaterials.length} material${sectionMaterials.length !== 1 ? 's' : ''})
-                                    </span>
-                                </div>
-                                <i class="fas fa-chevron-down text-gray-400 transition-transform section-chevron" id="chevron-section-${section.id}"></i>
+                
+                html += `
+                    <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                        <div class="bg-gray-100 dark:bg-gray-700 px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                             onclick="toggleMaterialSection('section-${section.id}')">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-folder text-primary-500 text-lg section-toggle-icon" id="icon-section-${section.id}"></i>
+                                <h4 class="font-semibold text-gray-900 dark:text-white">
+                                    Section ${index + 1}: ${escapeHtml(section.title)}
+                                </h4>
+                                <span class="text-sm text-gray-500 dark:text-gray-400">
+                                    (${sectionMaterials.length} material${sectionMaterials.length !== 1 ? 's' : ''})
+                                </span>
                             </div>
-                            <div id="section-${section.id}" class="material-section-content hidden">
+                            <i class="fas fa-chevron-down text-gray-400 transition-transform section-chevron" id="chevron-section-${section.id}"></i>
+                        </div>
+                        <div id="section-${section.id}" class="material-section-content hidden">
+                            ${sectionMaterials.length > 0 ? `
                                 <div class="p-3 space-y-2 bg-white dark:bg-gray-800">
                                     ${sectionMaterials.map(material => renderMaterialItem(material)).join('')}
                                 </div>
-                            </div>
+                            ` : `
+                                <div class="p-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    No materials in this section yet
+                                </div>
+                            `}
                         </div>
-                    `;
-                }
+                    </div>
+                `;
             });
             
             // Render unassigned materials
@@ -1397,6 +1410,12 @@
             if (e.target === this) {
                 closeSectionModal();
             }
+        });
+        
+        // Initialize sections and materials on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSections();
+            loadMaterials();
         });
     </script>
 </div>

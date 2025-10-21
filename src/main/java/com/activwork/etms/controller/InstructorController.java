@@ -642,6 +642,7 @@ public class InstructorController {
             @RequestParam("materialFile") MultipartFile materialFile,
             @RequestParam(value = "materialType", required = false) MaterialType materialType,
             @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "sectionId", required = false) UUID sectionId,
             @RequestParam(value = "isRequired", defaultValue = "false") Boolean isRequired,
             @RequestParam(value = "isDownloadable", defaultValue = "true") Boolean isDownloadable,
             @AuthenticationPrincipal UserDetails userDetails,
@@ -663,10 +664,12 @@ public class InstructorController {
                 description,
                 isRequired,
                 isDownloadable,
-                user.getId()
+                user.getId(),
+                sectionId
             );
             
-            log.info("Material uploaded successfully: {} for course: {}", material.getId(), courseId);
+            log.info("Material uploaded successfully: {} for course: {} with section: {}", 
+                material.getId(), courseId, sectionId);
             redirectAttributes.addFlashAttribute("success", 
                 "Material '" + materialFile.getOriginalFilename() + "' uploaded successfully!");
             

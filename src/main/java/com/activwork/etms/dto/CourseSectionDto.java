@@ -58,8 +58,12 @@ public class CourseSectionDto {
         // Convert materials if loaded
         if (section.getMaterials() != null && !section.getMaterials().isEmpty()) {
             dto.setMaterials(section.getMaterials().stream()
+                    .filter(m -> Boolean.TRUE.equals(m.getIsActive())) // Only include active materials
                     .map(MaterialResponseDto::fromEntity)
                     .collect(Collectors.toList()));
+            System.out.println("✅ Section '" + section.getTitle() + "' has " + dto.getMaterials().size() + " active materials");
+        } else {
+            System.out.println("⚠️ Section '" + section.getTitle() + "' has NO materials (null or empty)");
         }
         
         // Calculate total materials

@@ -74,12 +74,14 @@ public interface CourseSectionRepository extends JpaRepository<CourseSection, UU
      * @param courseId the course ID
      * @return list of sections with active materials
      */
-    @Query("SELECT DISTINCT s FROM CourseSection s " +
+    @Query("SELECT s FROM CourseSection s " +
            "LEFT JOIN FETCH s.materials m " +
            "WHERE s.course.id = :courseId " +
            "AND s.isActive = true " +
            "AND (m.isActive = true OR m IS NULL) " +
-           "ORDER BY s.sectionOrder ASC, m.materialOrder ASC")
+           "ORDER BY s.sectionOrder ASC, " +
+           "CASE WHEN m IS NULL THEN 1 ELSE 0 END ASC, " +
+           "m.materialOrder ASC")
     List<CourseSection> findSectionsWithActiveMaterialsByCourseId(@Param("courseId") UUID courseId);
 
     /**

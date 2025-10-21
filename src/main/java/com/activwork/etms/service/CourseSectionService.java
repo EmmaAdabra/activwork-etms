@@ -63,7 +63,28 @@ public class CourseSectionService {
         List<CourseSection> sections = sectionRepository
                 .findSectionsWithActiveMaterialsByCourseId(courseId);
         
-        return sections.stream()
+        // Deduplicate sections (JOIN FETCH creates one row per material, causing duplicates)
+        java.util.Map<UUID, CourseSection> uniqueSections = new java.util.LinkedHashMap<>();
+        for (CourseSection section : sections) {
+            uniqueSections.putIfAbsent(section.getId(), section);
+        }
+        
+        List<CourseSection> deduplicatedSections = new java.util.ArrayList<>(uniqueSections.values());
+        
+        log.info("Found {} unique sections with {} total rows from JOIN FETCH", 
+                deduplicatedSections.size(), sections.size());
+        
+        // Ensure materials are loaded (trigger lazy loading within transaction)
+        deduplicatedSections.forEach(section -> {
+            log.debug("Section: '{}' has {} materials", section.getTitle(), 
+                    section.getMaterials() != null ? section.getMaterials().size() : 0);
+            // Materials should already be loaded via JOIN FETCH, but ensure it
+            if (section.getMaterials() != null) {
+                section.getMaterials().size();  // Trigger lazy load if not already loaded
+            }
+        });
+        
+        return deduplicatedSections.stream()
                 .map(CourseSectionDto::fromEntity)
                 .collect(Collectors.toList());
     }

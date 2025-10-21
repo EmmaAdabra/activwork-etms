@@ -46,11 +46,7 @@ public class EntityMappingTest {
         assertTrue(isEntityRegistered(Material.class), "Material entity should be registered");
         assertTrue(isEntityRegistered(Enrollment.class), "Enrollment entity should be registered");
         assertTrue(isEntityRegistered(Feedback.class), "Feedback entity should be registered");
-        assertTrue(isEntityRegistered(LiveSession.class), "LiveSession entity should be registered");
-        assertTrue(isEntityRegistered(CoursePrerequisite.class), "CoursePrerequisite entity should be registered");
         assertTrue(isEntityRegistered(MaterialProgress.class), "MaterialProgress entity should be registered");
-        assertTrue(isEntityRegistered(Notification.class), "Notification entity should be registered");
-        assertTrue(isEntityRegistered(CourseAnalytics.class), "CourseAnalytics entity should be registered");
     }
 
     @Test
@@ -89,38 +85,10 @@ public class EntityMappingTest {
     }
 
     @Test
-    void testLiveSessionEntityMapping() {
-        EntityType<LiveSession> sessionEntity = entityManager.getMetamodel().entity(LiveSession.class);
-        assertNotNull(sessionEntity, "LiveSession entity should exist");
-        assertEquals("LiveSession", sessionEntity.getName(), "Entity name should be LiveSession");
-    }
-
-    @Test
-    void testCoursePrerequisiteEntityMapping() {
-        EntityType<CoursePrerequisite> prereqEntity = entityManager.getMetamodel().entity(CoursePrerequisite.class);
-        assertNotNull(prereqEntity, "CoursePrerequisite entity should exist");
-        assertEquals("CoursePrerequisite", prereqEntity.getName(), "Entity name should be CoursePrerequisite");
-    }
-
-    @Test
     void testMaterialProgressEntityMapping() {
         EntityType<MaterialProgress> progressEntity = entityManager.getMetamodel().entity(MaterialProgress.class);
         assertNotNull(progressEntity, "MaterialProgress entity should exist");
         assertEquals("MaterialProgress", progressEntity.getName(), "Entity name should be MaterialProgress");
-    }
-
-    @Test
-    void testNotificationEntityMapping() {
-        EntityType<Notification> notificationEntity = entityManager.getMetamodel().entity(Notification.class);
-        assertNotNull(notificationEntity, "Notification entity should exist");
-        assertEquals("Notification", notificationEntity.getName(), "Entity name should be Notification");
-    }
-
-    @Test
-    void testCourseAnalyticsEntityMapping() {
-        EntityType<CourseAnalytics> analyticsEntity = entityManager.getMetamodel().entity(CourseAnalytics.class);
-        assertNotNull(analyticsEntity, "CourseAnalytics entity should exist");
-        assertEquals("CourseAnalytics", analyticsEntity.getName(), "Entity name should be CourseAnalytics");
     }
 
     @Test

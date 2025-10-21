@@ -603,6 +603,23 @@
     </div>
 
     <script>
+        // DEBUG: Log sections and materials data passed from backend
+        const sectionsData = /*[[${sections}]]*/ [];
+        const directMaterialsData = /*[[${directMaterials}]]*/ [];
+        
+        console.log('📦 PREVIEW PAGE - Sections from backend:', sectionsData);
+        console.log('📊 PREVIEW PAGE - Section count:', sectionsData ? sectionsData.length : 0);
+        if (sectionsData && sectionsData.length > 0) {
+            sectionsData.forEach(s => {
+                console.log(`  Section: ${s.title}, Materials: ${s.materials ? s.materials.length : 0}`);
+                if (s.materials) {
+                    s.materials.forEach(m => console.log(`    - ${m.originalFilename}`));
+                }
+            });
+        }
+        console.log('📦 PREVIEW PAGE - Direct materials from backend:', directMaterialsData);
+        console.log('📊 PREVIEW PAGE - Direct material count:', directMaterialsData ? directMaterialsData.length : 0);
+        
         // Section accordion toggle (COPIED FROM LEARNER VIEW)
         function toggleSection(headerElement) {
             const sectionItem = headerElement.closest('.section-item');

@@ -123,8 +123,8 @@ public class Course {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Material> materials = new ArrayList<>();
 
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LiveSession> sessions = new ArrayList<>();
+    //@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    //private List<LiveSession> sessions = new ArrayList<>();
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Enrollment> enrollments = new ArrayList<>();
