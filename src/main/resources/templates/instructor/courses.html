@@ -10,10 +10,10 @@
     <!-- Page Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
         <div>
-            <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 class="text-4xl font-bold text-text-primary dark:text-text-light mb-2">
                 <i class="fas fa-book mr-2"></i>My Courses
             </h1>
-            <p class="text-gray-600 dark:text-gray-400">
+            <p class="text-text-secondary dark:text-text-muted">
                 Manage all your courses in one place
             </p>
         </div>
@@ -25,8 +25,8 @@
     </div>
     
     <!-- Course Filter Tabs -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-8">
-        <div class="flex border-b border-gray-200 dark:border-gray-700">
+    <div class="bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md mb-8">
+        <div class="flex border-b border-charcoal-200 dark:border-charcoal-700">
             <button onclick="filterCourses('all')" 
                     class="filter-tab active px-6 py-4 font-semibold border-b-2 transition">
                 All Courses (<span th:text="${#lists.size(courses)}">6</span>)
@@ -51,7 +51,7 @@
          class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div th:each="course : ${courses}" 
              th:attr="data-status=${course.status}"
-             class="course-card bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition overflow-hidden">
+             class="course-card bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md hover:shadow-xl transition overflow-hidden">
             <!-- Course Header -->
             <div class="h-48 bg-gradient-to-r from-primary-500 to-primary-700 flex items-center justify-center relative">
                 <i th:if="${course.thumbnailUrl == null}" 
@@ -73,7 +73,7 @@
             <!-- Course Content -->
             <div class="p-6">
                 <!-- Title -->
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2">
+                <h3 class="text-xl font-bold text-text-primary dark:text-text-light mb-3 line-clamp-2">
                     <a th:href="@{/courses/{id}(id=${course.id})}" 
                        th:text="${course.title}"
                        class="hover:text-primary-600 dark:hover:text-primary-400">
@@ -82,7 +82,7 @@
                 </h3>
                 
                 <!-- Meta Info -->
-                <div class="grid grid-cols-2 gap-4 mb-4 text-sm text-gray-600 dark:text-gray-400">
+                <div class="grid grid-cols-2 gap-4 mb-4 text-sm text-text-secondary dark:text-text-muted">
                     <div>
                         <i class="fas fa-tag mr-1"></i>
                         <span th:text="${course.categoryDisplayName}">Programming</span>
@@ -99,12 +99,17 @@
                 </div>
                 
                 <!-- Created/Updated -->
-                <p class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                <p class="text-xs text-text-muted dark:text-text-muted mb-4">
                     Updated: <span th:text="${#temporals.format(course.updatedAt, 'MMM dd, yyyy')}">Oct 10, 2025</span>
                 </p>
                 
                 <!-- Action Buttons -->
                 <div class="flex flex-wrap gap-2">
+                    <a th:href="@{/instructor/courses/{id}/preview(id=${course.id})}" 
+                       class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold rounded-lg transition">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    
                     <a th:href="@{/instructor/courses/{id}/edit(id=${course.id})}" 
                        class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-center text-sm font-semibold rounded-lg transition">
                         <i class="fas fa-edit mr-1"></i>Edit
@@ -122,7 +127,7 @@
                 </div>
                 
                 <!-- Publish/Archive/Delete Actions -->
-                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2 text-sm">
+                <div class="mt-3 pt-3 border-t border-charcoal-200 dark:border-charcoal-700 flex flex-wrap gap-2 text-sm">
                     <!-- Publish Button (Draft only) -->
                     <form th:if="${course.status.name() == 'DRAFT'}" 
                           th:action="@{/instructor/courses/{id}/publish(id=${course.id})}" 
@@ -162,10 +167,10 @@
     
     <!-- Empty State -->
     <div th:if="${courses == null or courses.empty}" 
-         class="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-        <i class="fas fa-book text-6xl text-gray-400 mb-4"></i>
-        <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">No Courses Yet</h3>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">
+         class="text-center py-16 bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md">
+        <i class="fas fa-book text-6xl text-text-muted mb-4"></i>
+        <h3 class="text-2xl font-semibold text-text-primary dark:text-text-light mb-2">No Courses Yet</h3>
+        <p class="text-text-secondary dark:text-text-muted mb-6">
             Create your first training course to help candidates enhance their skills
         </p>
         <a th:href="@{/instructor/courses/create}" 
@@ -185,11 +190,11 @@
             // Update tab styles
             tabs.forEach(tab => {
                 tab.classList.remove('active', 'border-primary-600', 'text-primary-600', 'dark:border-primary-400', 'dark:text-primary-400');
-                tab.classList.add('text-gray-600', 'dark:text-gray-400');
+                tab.classList.add('text-text-secondary', 'dark:text-text-muted');
             });
             
             event.target.classList.add('active', 'border-primary-600', 'text-primary-600', 'dark:border-primary-400', 'dark:text-primary-400');
-            event.target.classList.remove('text-gray-600', 'dark:text-gray-400');
+            event.target.classList.remove('text-text-secondary', 'dark:text-text-muted');
             
             // Filter cards
             cards.forEach(card => {

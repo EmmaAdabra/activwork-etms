@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${course.title} + ' - Course Preview - ActivWork Training Portal'">Course Preview - ActivWork Training Portal</title>
+    <style>
+        /* Instructor Preview Overlay Styles */
+        .instructor-preview-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            padding: 0.75rem 1rem;
+            z-index: 9999;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .instructor-preview-bar .preview-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .instructor-preview-bar .preview-actions .left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .instructor-preview-bar .preview-actions .right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .preview-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .preview-action-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .preview-action-btn:hover {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .preview-action-btn.primary {
+            background: rgba(255,255,255,0.9);
+            color: #d97706;
+        }
+        
+        .preview-action-btn.primary:hover {
+            background: white;
+            color: #b45309;
+        }
+        
+        /* Adjust main content to account for preview bar */
+        .main-content-with-preview {
+            margin-top: 3.5rem;
+        }
+        
+        /* Course content styling */
+        .course-preview-content {
+            background: #ffffff;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .dark .course-preview-content {
+            background: #2d2d2d;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Content -->
+    <div layout:fragment="content">
+        <!-- Instructor Preview Bar -->
+        <div class="instructor-preview-bar">
+            <div class="preview-actions">
+                <div class="left">
+                    <div class="preview-badge">
+                        <i class="fas fa-eye mr-2"></i>Preview Mode
+                    </div>
+                    <span class="text-sm">Viewing course as learners see it</span>
+                </div>
+                <div class="right">
+                    <a th:href="@{/instructor/courses/{id}/edit(id=${course.id})}" 
+                       class="preview-action-btn primary">
+                        <i class="fas fa-edit mr-1"></i>Edit Course
+                    </a>
+                    <a th:href="@{/instructor/courses}" 
+                       class="preview-action-btn">
+                        <i class="fas fa-arrow-left mr-1"></i>Back to Courses
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content-with-preview">
+        <div class="container mx-auto px-4 py-8">
+            <!-- Course Header -->
+            <div class="bg-gradient-to-r from-primary-600 to-primary-800 dark:from-primary-700 dark:to-primary-900 rounded-lg shadow-xl p-8 mb-8 text-white">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Course Info -->
+                    <div class="lg:col-span-2">
+                        <!-- Breadcrumb -->
+                        <div class="text-primary-200 text-sm mb-4">
+                            <a th:href="@{/instructor/courses}" class="hover:underline">My Courses</a> / 
+                            <span th:text="${course.categoryDisplayName}">Programming</span>
+                        </div>
+                        
+                        <!-- Category -->
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-4 py-2 bg-white/20 rounded-full text-sm font-semibold">
+                                <span th:text="${course.categoryDisplayName}">Programming</span>
+                            </span>
+                        </div>
+                        
+                        <!-- Title -->
+                        <h1 class="text-4xl font-bold mb-4" th:text="${course.title}">
+                            Java Spring Boot Fundamentals
+                        </h1>
+                        
+                        <!-- Summary -->
+                        <p class="text-xl text-primary-100 mb-6" th:text="${course.summary}">
+                            Master Spring Boot development from basics to advanced concepts
+                        </p>
+                        
+                        <!-- Meta Info -->
+                        <div class="flex flex-wrap gap-6 text-sm">
+                            <div class="flex items-center">
+                                <i class="fas fa-chalkboard-teacher mr-2"></i>
+                                <span>By <strong th:text="${course.instructorName}">Instructor Name</strong></span>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span th:text="${course.durationHours} + ' hours'">10 hours</span>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <i class="fas fa-users mr-2"></i>
+                                <span th:text="${course.enrollmentCount ?: 0} + ' enrolled'">50 enrolled</span>
+                            </div>
+                            
+                            <div class="flex items-center" th:if="${course.averageRating != null}">
+                                <i class="fas fa-star mr-2"></i>
+                                <span th:text="${#numbers.formatDecimal(course.averageRating, 1, 1)}">4.5</span>
+                                <span class="ml-1" th:text="'(' + ${course.totalRatings ?: 0} + ')'">(10)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Course Thumbnail -->
+                    <div class="flex justify-center lg:justify-end">
+                        <div class="relative">
+                            <!-- Show thumbnail if available, otherwise show placeholder -->
+                            <div th:if="${course.thumbnailUrl != null and !course.thumbnailUrl.isEmpty()}" 
+                                 class="w-64 h-36 rounded-lg shadow-lg overflow-hidden">
+                                <img th:src="${course.thumbnailUrl}" 
+                                     th:alt="${course.title}"
+                                     class="w-full h-full object-cover">
+                                
+                                <!-- Video Preview Overlay -->
+                                <div th:if="${course.videoPreviewUrl != null}" 
+                                     class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                                    <button class="w-16 h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center hover:bg-opacity-100 transition">
+                                        <i class="fas fa-play text-primary-600 text-xl ml-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Default placeholder when no thumbnail -->
+                            <div th:if="${course.thumbnailUrl == null or course.thumbnailUrl.isEmpty()}" 
+                                 class="w-64 h-36 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800 dark:to-primary-900 rounded-lg shadow-lg flex items-center justify-center">
+                                <div class="text-center">
+                                    <i class="fas fa-image text-4xl text-primary-400 dark:text-primary-500 mb-2"></i>
+                                    <p class="text-sm text-primary-600 dark:text-primary-400 font-medium">No Thumbnail</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Course Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Main Content -->
+                <div class="lg:col-span-2">
+                    <!-- Course Description -->
+                    <div class="course-preview-content mb-8">
+                        <div class="p-6">
+                            <h2 class="text-2xl font-bold text-text-primary dark:text-text-light mb-4">
+                                <i class="fas fa-info-circle mr-2"></i>About This Course
+                            </h2>
+                            <div class="prose dark:prose-invert max-w-none" th:utext="${course.description}">
+                                <p>This comprehensive course covers all aspects of Spring Boot development...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Learning Objectives -->
+                    <div class="course-preview-content mb-8" th:if="${course.learningObjectives != null and !course.learningObjectives.empty}">
+                        <div class="p-6">
+                            <h2 class="text-2xl font-bold text-text-primary dark:text-text-light mb-4">
+                                <i class="fas fa-target mr-2"></i>What You'll Learn
+                            </h2>
+                            <ul class="space-y-2">
+                                <li th:each="objective : ${course.learningObjectives}" 
+                                    class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
+                                    <span th:text="${objective}" class="text-text-secondary dark:text-text-muted">Learn Spring Boot fundamentals</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Prerequisites -->
+                    <div class="course-preview-content mb-8" th:if="${course.prerequisites != null and !course.prerequisites.empty}">
+                        <div class="p-6">
+                            <h2 class="text-2xl font-bold text-text-primary dark:text-text-light mb-4">
+                                <i class="fas fa-list-check mr-2"></i>Prerequisites
+                            </h2>
+                            <ul class="space-y-2">
+                                <li th:each="prerequisite : ${course.prerequisites}" 
+                                    class="flex items-start">
+                                    <i class="fas fa-arrow-right text-primary-500 mr-3 mt-1"></i>
+                                    <span th:text="${prerequisite}" class="text-text-secondary dark:text-text-muted">Basic Java knowledge</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Course Content Section (COPIED FROM LEARNER VIEW) -->
+                    <div class="bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md p-8">
+                        <h2 class="text-2xl font-bold text-text-primary dark:text-text-light mb-6">
+                            <i class="fas fa-layer-group mr-2"></i>Course Content
+                            <span class="text-sm font-normal text-text-muted dark:text-text-muted ml-2" 
+                                  th:if="${!#lists.isEmpty(sections)}">
+                                (<span th:text="${#lists.size(sections)}">0</span> sections)
+                            </span>
+                        </h2>
+                        
+                        <!-- Sections Accordion (if sections exist) -->
+                        <div th:if="${!#lists.isEmpty(sections)}" class="space-y-3">
+                            <div th:each="section, iterStat : ${sections}" 
+                                 class="border border-charcoal-200 dark:border-charcoal-700 rounded-lg overflow-hidden section-item">
+                                
+                                <!-- Section Header (Clickable) -->
+                                <div class="section-header bg-charcoal-50 dark:bg-charcoal-700 p-5 cursor-pointer hover:bg-charcoal-100 dark:hover:bg-charcoal-600 transition"
+                                     th:attr="data-section-id=${section.id}"
+                                     onclick="toggleSection(this)">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-4 flex-1">
+                                            <!-- Toggle Icon -->
+                                            <i class="fas fa-chevron-down section-icon text-text-muted dark:text-text-muted transition-transform"></i>
+                                            
+                                            <!-- Section Info -->
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-3 mb-1">
+                                                    <span class="text-xs font-semibold text-text-muted dark:text-text-muted uppercase tracking-wide">
+                                                        Section <span th:text="${iterStat.count}">1</span>
+                                                    </span>
+                                                    <h3 class="text-lg font-bold text-text-primary dark:text-text-light" th:text="${section.title}">
+                                                        Introduction
+                                                    </h3>
+                                                </div>
+                                                
+                                                <p th:if="${section.description != null and !#strings.isEmpty(section.description)}"
+                                                   class="text-sm text-text-secondary dark:text-text-muted mb-2"
+                                                   th:text="${section.description}">
+                                                    Section description
+                                                </p>
+                                                
+                                                <div class="flex items-center gap-4 text-sm text-text-muted dark:text-text-muted">
+                                                    <span>
+                                                        <i class="fas fa-file mr-1"></i>
+                                                        <span th:text="${section.totalMaterials ?: 0}">0</span> materials
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Section Content (Materials) - Initially Hidden -->
+                                <div class="section-content hidden">
+                                    <div th:if="${!#lists.isEmpty(section.materials)}" class="p-4 space-y-2 bg-white dark:bg-gray-800">
+                                        <div th:each="material : ${section.materials}" 
+                                             class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                                            
+                                            <div class="flex items-center gap-4 flex-1">
+                                                <!-- Material Type Icon -->
+                                                <div th:switch="${material.materialType.toString()}" class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center">
+                                                    <div th:case="'VIDEO'" class="bg-red-100 dark:bg-red-900/30 w-full h-full rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-play text-red-600 dark:text-red-400"></i>
+                                                    </div>
+                                                    <div th:case="'PDF'" class="bg-red-100 dark:bg-red-900/30 w-full h-full rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-file-pdf text-red-600 dark:text-red-400"></i>
+                                                    </div>
+                                                    <div th:case="'AUDIO'" class="bg-purple-100 dark:bg-purple-900/30 w-full h-full rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-volume-up text-purple-600 dark:text-purple-400"></i>
+                                                    </div>
+                                                    <div th:case="'IMAGE'" class="bg-green-100 dark:bg-green-900/30 w-full h-full rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-image text-green-600 dark:text-green-400"></i>
+                                                    </div>
+                                                    <div th:case="*" class="bg-blue-100 dark:bg-blue-900/30 w-full h-full rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-file text-blue-600 dark:text-blue-400"></i>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Material Info -->
+                                                <div class="flex-1 min-w-0">
+                                                    <h4 class="font-semibold text-gray-900 dark:text-white mb-1"
+                                                        th:text="${material.originalFilename}">
+                                                        Material Title
+                                                    </h4>
+                                                    
+                                                    <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                                                        <span th:text="${material.materialType}">VIDEO</span>
+                                                        <span th:if="${material.durationSeconds != null}">
+                                                            <i class="fas fa-clock mr-1"></i>
+                                                            <span th:text="${#numbers.formatDecimal(material.durationSeconds / 60, 1, 0)} + ' min'">5 min</span>
+                                                        </span>
+                                                        <span th:if="${material.isRequired}"
+                                                              class="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded font-semibold">
+                                                            <i class="fas fa-star mr-1"></i>Required
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Action Button -->
+                                            <div class="flex items-center gap-3">
+                                                <!-- Video Play Button -->
+                                                <button th:if="${material.materialType.toString() == 'VIDEO'}"
+                                                        th:data-material-id="${material.id}"
+                                                        onclick="toggleVideoPlayer(this.dataset.materialId)"
+                                                        class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                                                    <i class="fas fa-play mr-1"></i>
+                                                    <span>Watch</span>
+                                                </button>
+                                                
+                                                <!-- Non-Video: Open Button -->
+                                                <a th:if="${material.materialType.toString() != 'VIDEO'}"
+                                                   th:href="@{/instructor/materials/{id}/view(id=${material.id})}"
+                                                   target="_blank"
+                                                   rel="noopener noreferrer"
+                                                   class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                                                    <i class="fas fa-external-link-alt mr-1"></i>
+                                                    <span>Open</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Empty Section Message -->
+                                    <div th:if="${#lists.isEmpty(section.materials)}" 
+                                         class="p-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        No materials in this section yet
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Fallback: Show flat materials list if no sections -->
+                        <div th:if="${#lists.isEmpty(sections)}" class="space-y-4">
+                            <div th:if="${#lists.isEmpty(directMaterials)}" class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 text-center">
+                                <i class="fas fa-info-circle text-4xl text-gray-400 mb-3"></i>
+                                <p class="text-gray-600 dark:text-gray-400">
+                                    No materials available for this course yet
+                                </p>
+                                <a th:href="@{/instructor/courses/{id}/edit(id=${course.id})}" 
+                                   class="inline-block mt-4 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition">
+                                    <i class="fas fa-plus mr-2"></i>Add Content
+                                </a>
+                            </div>
+                            
+                            <div th:if="${!#lists.isEmpty(directMaterials)}" class="grid gap-4">
+                                <div th:each="material : ${directMaterials}" 
+                                     class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex items-start space-x-4 flex-1">
+                                            <!-- Material Type Icon -->
+                                            <div class="flex-shrink-0">
+                                                <div th:switch="${material.materialType}" 
+                                                     class="w-12 h-12 rounded-lg flex items-center justify-center">
+                                                    <div th:case="'VIDEO'" class="bg-red-100 dark:bg-red-900/30 w-full h-full rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-play text-2xl text-red-600 dark:text-red-400"></i>
+                                                    </div>
+                                                    <div th:case="'PDF'" class="bg-red-100 dark:bg-red-900/30 w-full h-full rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-file-pdf text-2xl text-red-600 dark:text-red-400"></i>
+                                                    </div>
+                                                    <div th:case="'AUDIO'" class="bg-purple-100 dark:bg-purple-900/30 w-full h-full rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-music text-2xl text-purple-600 dark:text-purple-400"></i>
+                                                    </div>
+                                                    <div th:case="*" class="bg-blue-100 dark:bg-blue-900/30 w-full h-full rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-file text-2xl text-blue-600 dark:text-blue-400"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Material Info -->
+                                            <div class="flex-1 min-w-0">
+                                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" 
+                                                    th:text="${material.originalFilename}">Material Title</h3>
+                                                
+                                                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                                    <span class="flex items-center">
+                                                        <i class="fas fa-tag mr-1"></i>
+                                                        <span th:text="${material.materialType}">PDF</span>
+                                                    </span>
+                                                    
+                                                    <span class="flex items-center" th:if="${material.durationSeconds != null}">
+                                                        <i class="fas fa-clock mr-1"></i>
+                                                        <span th:text="${#numbers.formatDecimal(material.durationSeconds / 60, 1, 0)} + ' min'">15 min</span>
+                                                    </span>
+                                                    
+                                                    <span class="flex items-center" th:if="${material.isRequired}">
+                                                        <i class="fas fa-star mr-1 text-yellow-500"></i>
+                                                        <span class="text-yellow-600 dark:text-yellow-400 font-medium">Required</span>
+                                                    </span>
+                                                </div>
+                                                
+                                                <p th:if="${material.description != null and !#strings.isEmpty(material.description)}" 
+                                                   class="text-gray-600 dark:text-gray-400 text-sm" 
+                                                   th:text="${material.description}">Material description</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Action Buttons -->
+                                        <div class="flex flex-col md:flex-row items-end md:items-center gap-3">
+                                            <!-- Video Player Toggle Button -->
+                                            <button th:if="${material.materialType.toString() == 'VIDEO'}" 
+                                                    th:data-material-id="${material.id}"
+                                                    onclick="toggleVideoPlayer(this.dataset.materialId)"
+                                                    class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                                                <i class="fas fa-play mr-1"></i>
+                                                <span>Watch Video</span>
+                                            </button>
+                                            
+                                            <!-- Non-Video: Open Button -->
+                                            <a th:if="${material.materialType.toString() != 'VIDEO'}"
+                                               th:href="@{/instructor/materials/{id}/view(id=${material.id})}" 
+                                               target="_blank"
+                                               rel="noopener noreferrer"
+                                               class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                                                <i class="fas fa-external-link-alt mr-1"></i>
+                                                <span>Open</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sidebar -->
+                <div class="lg:col-span-1">
+                    <!-- Start Learning Card (Preview Mode) -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 text-gray-900 dark:text-white h-fit mb-6">
+                        <h3 class="text-2xl font-bold mb-4">Start Learning</h3>
+                        
+                        <!-- Course Access -->
+                        <div class="mb-4">
+                            <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                                <span>FREE</span>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Access anytime, learn at your own pace</p>
+                        </div>
+                        
+                        <!-- Course Info -->
+                        <div class="space-y-3 mb-6 text-sm text-gray-600 dark:text-gray-400">
+                            <div class="flex items-center justify-between">
+                                <span><i class="fas fa-users mr-2"></i>Learners:</span>
+                                <strong th:text="${course.enrollmentCount ?: 0}">50</strong>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <span><i class="fas fa-clock mr-2"></i>Duration:</span>
+                                <strong th:text="${course.durationHours} + ' hours'">10 hours</strong>
+                            </div>
+                        </div>
+                        
+                        <!-- Disabled Button for Preview -->
+                        <!-- <button type="button" 
+                                disabled
+                                class="w-full py-3 px-4 bg-gray-400 text-white font-bold rounded-lg cursor-not-allowed shadow-md">
+                            <i class="fas fa-eye mr-2"></i>Preview Mode (Disabled)
+                        </button>
+                        
+                        <p class="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
+                            This is how learners will see the "Start Learning" button
+                        </p> -->
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="space-y-2">
+                        <a th:href="@{/instructor/courses/{id}/edit(id=${course.id})}" 
+                           class="w-full bg-primary-600 hover:bg-primary-700 text-white text-center py-3 px-4 rounded-lg font-semibold transition block">
+                            <i class="fas fa-edit mr-2"></i>Edit Course
+                        </a>
+                        
+                        <a th:href="@{/instructor/courses/{id}/enrollments(id=${course.id})}" 
+                           class="w-full bg-green-600 hover:bg-green-700 text-white text-center py-3 px-4 rounded-lg font-semibold transition block">
+                            <i class="fas fa-users mr-2"></i>View Enrollments
+                        </a>
+                        
+                        <a th:href="@{/instructor/courses}" 
+                           class="w-full bg-gray-600 hover:bg-gray-700 text-white text-center py-3 px-4 rounded-lg font-semibold transition block">
+                            <i class="fas fa-arrow-left mr-2"></i>Back to Courses
+                        </a>
+                    </div>
+                    
+                    <!-- Course Stats -->
+                    <div class="course-preview-content">
+                        <div class="p-6">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                                <i class="fas fa-chart-bar mr-2"></i>Course Statistics
+                            </h3>
+                            
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Enrollments:</span>
+                                    <span class="font-semibold" th:text="${course.enrollmentCount ?: 0}">50</span>
+                                </div>
+                                
+                                <div class="flex justify-between" th:if="${course.averageRating != null}">
+                                    <span class="text-gray-600 dark:text-gray-400">Rating:</span>
+                                    <span class="font-semibold" th:text="${#numbers.formatDecimal(course.averageRating, 1, 1)}">4.5</span>
+                                </div>
+                                
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Duration:</span>
+                                    <span class="font-semibold" th:text="${course.durationHours} + ' hours'">10 hours</span>
+                                </div>
+                                
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Status:</span>
+                                    <span th:class="${course.status.name() == 'PUBLISHED' ? 'text-green-600' : 
+                                                     course.status.name() == 'DRAFT' ? 'text-yellow-600' : 'text-gray-600'}"
+                                          th:text="${course.status}">PUBLISHED</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+        
+        <!-- Video Player Modal (COPIED FROM LEARNER VIEW) -->
+    <div id="videoPlayerModal" class="fixed inset-0 bg-black bg-opacity-75 z-[10000] hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full">
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <h3 id="videoTitle" class="text-lg font-semibold text-gray-900 dark:text-white">
+                            Video Player
+                        </h3>
+                        <button onclick="closeVideoPlayer()" 
+                                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="p-4">
+                    <video id="videoPlayer" 
+                           controls 
+                           width="100%" 
+                           class="rounded-lg"
+                           oncontextmenu="return false;">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Section accordion toggle (COPIED FROM LEARNER VIEW)
+        function toggleSection(headerElement) {
+            const sectionItem = headerElement.closest('.section-item');
+            const sectionContent = sectionItem.querySelector('.section-content');
+            const icon = headerElement.querySelector('.section-icon');
+            
+            if (sectionContent.classList.contains('hidden')) {
+                sectionContent.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                sectionContent.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Video player functions (ADAPTED FOR INSTRUCTOR PREVIEW)
+        function toggleVideoPlayer(materialId) {
+            console.log('Opening video player for material:', materialId);
+            const video = document.getElementById('videoPlayer');
+            const modal = document.getElementById('videoPlayerModal');
+            const videoTitle = document.getElementById('videoTitle');
+            
+            // Set video source using instructor endpoint
+            video.src = `/instructor/materials/${materialId}/view`;
+            videoTitle.textContent = 'Loading video...';
+            
+            // Show modal
+            modal.classList.remove('hidden');
+            
+            // Add error handler
+            video.onerror = function(e) {
+                console.error('Video load error:', e);
+            };
+            
+            // Add loaded handler
+            video.onloadeddata = function() {
+                console.log('Video loaded successfully');
+                videoTitle.textContent = 'Video Player';
+            };
+        }
+
+        function closeVideoPlayer() {
+            const modal = document.getElementById('videoPlayerModal');
+            const video = document.getElementById('videoPlayer');
+            
+            // Remove error handler
+            video.onerror = null;
+            
+            // Pause and reset
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+            
+            // Hide modal
+            modal.classList.add('hidden');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('videoPlayerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeVideoPlayer();
+            }
+        });
+        
+        // Initialize - expand first section on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstSection = document.querySelector('.section-header');
+            if (firstSection) {
+                toggleSection(firstSection);
+            }
+        });
+    </script>
+    </div>
+</body>
+</html>

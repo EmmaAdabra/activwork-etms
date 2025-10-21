@@ -20,17 +20,45 @@
             theme: {
                 extend: {
                     colors: {
+                        // Modern color palette inspired by Web3 platforms
                         primary: {
-                            50: '#EEF2FF',
-                            100: '#E0E7FF',
-                            200: '#C7D2FE',
-                            300: '#A5B4FC',
-                            400: '#818CF8',
-                            500: '#6366F1',
-                            600: '#4F46E5',
-                            700: '#4338CA',
-                            800: '#3730A3',
-                            900: '#312E81',
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        // Charcoal and grey palette for modern UI
+                        charcoal: {
+                            50: '#f8f9fa',
+                            100: '#f1f3f4',
+                            200: '#e8eaed',
+                            300: '#dadce0',
+                            400: '#bdc1c6',
+                            500: '#9aa0a6',
+                            600: '#80868b',
+                            700: '#5f6368',
+                            800: '#3c4043',
+                            900: '#202124',
+                        },
+                        // Soothing text colors
+                        text: {
+                            primary: '#2d2d2d',
+                            secondary: '#6c757d',
+                            muted: '#8b949e',
+                            light: '#e6e6e6',
+                        },
+                        // Background colors
+                        bg: {
+                            primary: '#f8f9fa',
+                            secondary: '#ffffff',
+                            dark: '#1a1a1a',
+                            darkSecondary: '#2d2d2d',
                         }
                     }
                 }
@@ -80,8 +108,8 @@
         
         .sidebar {
             width: 260px;
-            background: white;
-            border-right: 1px solid #e5e7eb;
+            background: #ffffff;
+            border-right: 1px solid #e8eaed;
             padding: 1.5rem 0;
             position: fixed;
             top: 80px;
@@ -92,47 +120,47 @@
         }
         
         .dark .sidebar {
-            background: #1f2937;
-            border-right-color: #374151;
+            background: #2d2d2d;
+            border-right-color: #3c4043;
         }
         
         .sidebar-nav-item {
             display: flex;
             align-items: center;
             padding: 0.75rem 1.5rem;
-            color: #4b5563;
+            color: #6c757d;
             text-decoration: none;
             transition: all 0.2s ease;
             border-left: 3px solid transparent;
         }
         
         .dark .sidebar-nav-item {
-            color: #9ca3af;
+            color: #8b949e;
         }
         
         .sidebar-nav-item:hover {
-            background: #f3f4f6;
-            color: #4f46e5;
-            border-left-color: #4f46e5;
+            background: #f1f3f4;
+            color: #0ea5e9;
+            border-left-color: #0ea5e9;
         }
         
         .dark .sidebar-nav-item:hover {
-            background: #374151;
-            color: #818cf8;
-            border-left-color: #818cf8;
+            background: #3c4043;
+            color: #38bdf8;
+            border-left-color: #38bdf8;
         }
         
         .sidebar-nav-item.active {
-            background: #eef2ff;
-            color: #4f46e5;
-            border-left-color: #4f46e5;
+            background: #e0f2fe;
+            color: #0ea5e9;
+            border-left-color: #0ea5e9;
             font-weight: 600;
         }
         
         .dark .sidebar-nav-item.active {
-            background: #312e81;
-            color: #a5b4fc;
-            border-left-color: #a5b4fc;
+            background: #075985;
+            color: #7dd3fc;
+            border-left-color: #7dd3fc;
         }
         
         .sidebar-nav-item i {
@@ -144,7 +172,7 @@
         .main-content-with-sidebar {
             flex: 1;
             margin-left: 260px;
-            padding: 2rem 2rem 0 2rem;
+            padding: 2rem;
             overflow-x: hidden;
             display: flex;
             flex-direction: column;
@@ -213,11 +241,12 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col" style="min-height: 100vh; margin: 0;">
+<body class="bg-charcoal-50 dark:bg-charcoal-900 text-text-primary dark:text-text-light flex flex-col" style="min-height: 100vh; margin: 0;">
 
     <!-- Header with Navigation -->
-    <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-50">
-        <nav class="container mx-auto px-4 py-4">
+    <header class="bg-bg-secondary dark:bg-bg-darkSecondary shadow-md sticky top-0 z-50">
+        <!-- Non-authenticated navbar: centered with max-w-5xl -->
+        <nav sec:authorize="!isAuthenticated()" class="max-w-5xl mx-auto px-6 py-4">
             <div class="flex items-center justify-between">
                 <!-- Logo -->
                 <a th:href="@{/}" class="flex items-center space-x-2">
@@ -228,22 +257,71 @@
                 <!-- Desktop Navigation -->
                 <div class="hidden md:flex items-center space-x-6">
                     <!-- Public Links -->
-                    <a th:href="@{/}" class="hover:text-primary-600 dark:hover:text-primary-400">Home</a>
-                    <a th:href="@{/courses}" class="hover:text-primary-600 dark:hover:text-primary-400">Courses</a>
+                    <a th:href="@{/}" class="text-text-secondary hover:text-primary-600 dark:text-text-muted dark:hover:text-primary-400">Home</a>
+                    <a th:href="@{/courses}" class="text-text-secondary hover:text-primary-600 dark:text-text-muted dark:hover:text-primary-400">Courses</a>
+                    
+                    <!-- Dark Mode Toggle -->
+                    <button id="theme-toggle" class="p-2 rounded-lg bg-charcoal-200 dark:bg-charcoal-700 hover:bg-charcoal-300 dark:hover:bg-charcoal-600 transition">
+                        <i class="fas fa-moon dark:hidden text-charcoal-700"></i>
+                        <i class="fas fa-sun hidden dark:inline text-yellow-300"></i>
+                    </button>
+                    
+                    <!-- Auth Buttons -->
+                    <a th:href="@{/login}" 
+                       class="px-4 py-2 text-primary-600 dark:text-primary-400 hover:bg-charcoal-100 dark:hover:bg-charcoal-700 rounded-lg transition border border-primary-600 dark:border-primary-400">
+                        Login
+                    </a>
+                    <a th:href="@{/register}" 
+                       class="px-4 py-2 bg-primary-600 dark:bg-primary-700 text-white hover:bg-primary-700 dark:hover:bg-primary-800 rounded-lg transition">
+                        Register
+                    </a>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden text-text-secondary dark:text-text-muted">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4 pb-4 border-t border-charcoal-200 dark:border-charcoal-700 pt-4">
+                <div class="flex flex-col space-y-3">
+                    <a th:href="@{/}" class="text-text-secondary hover:text-primary-600 dark:text-text-muted dark:hover:text-primary-400 py-2">Home</a>
+                    <a th:href="@{/courses}" class="text-text-secondary hover:text-primary-600 dark:text-text-muted dark:hover:text-primary-400 py-2">Courses</a>
+                    <a th:href="@{/login}" class="text-primary-600 dark:text-primary-400 py-2 border-t border-charcoal-200 dark:border-charcoal-700">Login</a>
+                    <a th:href="@{/register}" class="bg-primary-600 dark:bg-primary-700 text-white px-4 py-2 rounded-lg text-center">Register</a>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Authenticated navbar: full width -->
+        <nav sec:authorize="isAuthenticated()" class="px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a th:href="@{/}" class="flex items-center space-x-2">
+                    <i class="fas fa-briefcase text-primary-600 dark:text-primary-400 text-3xl"></i>
+                    <span class="text-xl font-bold text-primary-600 dark:text-primary-400">ActivWork Training Portal</span>
+                </a>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <!-- Public Links -->
+                    <a th:href="@{/}" class="text-text-secondary hover:text-primary-600 dark:text-text-muted dark:hover:text-primary-400">Home</a>
+                    <a th:href="@{/courses}" class="text-text-secondary hover:text-primary-600 dark:text-text-muted dark:hover:text-primary-400">Courses</a>
                     
                     <!-- Authenticated User Links -->
                     <div sec:authorize="isAuthenticated()" class="flex items-center space-x-6">
-                        <a th:href="@{/dashboard}" class="hover:text-primary-600 dark:hover:text-primary-400">Dashboard</a>
+                        <a th:href="@{/dashboard}" class="text-text-secondary hover:text-primary-600 dark:text-text-muted dark:hover:text-primary-400">Dashboard</a>
                         
                         <!-- Instructor-only Links -->
                         <a sec:authorize="hasAuthority('INSTRUCTOR')" 
                            th:href="@{/instructor/courses}" 
-                           class="hover:text-primary-600 dark:hover:text-primary-400">My Courses</a>
+                           class="text-text-secondary hover:text-primary-600 dark:text-text-muted dark:hover:text-primary-400">My Courses</a>
                         
                         <!-- Learner-only Links -->
                         <a sec:authorize="hasAuthority('LEARNER')" 
                            th:href="@{/learner/enrollments}" 
-                           class="hover:text-primary-600 dark:hover:text-primary-400">My Enrollments</a>
+                           class="text-text-secondary hover:text-primary-600 dark:text-text-muted dark:hover:text-primary-400">My Enrollments</a>
                     </div>
                 </div>
                 
@@ -251,7 +329,7 @@
                 <div class="flex items-center space-x-4">
                     <!-- Dark Mode Toggle -->
                     <button id="darkModeToggle" 
-                            class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+                            class="p-2 rounded-lg bg-charcoal-200 dark:bg-charcoal-700 hover:bg-charcoal-300 dark:hover:bg-charcoal-600 text-text-secondary dark:text-text-muted"
                             aria-label="Toggle Dark Mode">
                         <i class="fas fa-moon dark:hidden"></i>
                         <i class="fas fa-sun hidden dark:inline"></i>
@@ -260,7 +338,7 @@
                     <!-- Authentication Buttons -->
                     <div sec:authorize="!isAuthenticated()" class="hidden md:flex space-x-2">
                         <a th:href="@{/login}" 
-                           class="px-4 py-2 rounded-lg border border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-700">
+                           class="px-4 py-2 rounded-lg border border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-charcoal-700">
                             Login
                         </a>
                         <a th:href="@{/register}" 
@@ -272,7 +350,7 @@
                     <!-- User Menu (Authenticated) -->
                     <div sec:authorize="isAuthenticated()" class="relative hidden md:block">
                         <button id="userMenuButton" 
-                                class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">
+                                class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-charcoal-200 dark:bg-charcoal-700 hover:bg-charcoal-300 dark:hover:bg-charcoal-600 text-text-secondary dark:text-text-muted">
                             <i class="fas fa-user"></i>
                             <span sec:authentication="name">user@email.com</span>
                             <i class="fas fa-chevron-down text-xs"></i>
@@ -280,15 +358,15 @@
                         
                         <!-- Dropdown Menu -->
                         <div id="userMenuDropdown" 
-                             class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2">
+                             class="hidden absolute right-0 mt-2 w-48 bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-lg border border-charcoal-200 dark:border-charcoal-700 py-2">
                             <a th:href="@{/dashboard}" 
-                               class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                               class="block px-4 py-2 hover:bg-charcoal-100 dark:hover:bg-charcoal-700 text-text-secondary dark:text-text-muted">
                                 <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
                             </a>
-                            <hr class="my-2 border-gray-200 dark:border-gray-700">
+                            <hr class="my-2 border-charcoal-200 dark:border-charcoal-700">
                             <form th:action="@{/logout}" method="post" class="block">
                                 <button type="submit" 
-                                        class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 dark:text-red-400">
+                                        class="w-full text-left px-4 py-2 hover:bg-charcoal-100 dark:hover:bg-charcoal-700 text-red-600 dark:text-red-400">
                                     <i class="fas fa-sign-out-alt mr-2"></i>Logout
                                 </button>
                             </form>
@@ -297,30 +375,30 @@
                     
                     <!-- Mobile Menu Toggle -->
                     <button id="mobileMenuToggle" 
-                            class="md:hidden p-2 rounded-lg bg-gray-200 dark:bg-gray-700">
+                            class="md:hidden p-2 rounded-lg bg-charcoal-200 dark:bg-charcoal-700 text-text-secondary dark:text-text-muted">
                         <i class="fas fa-bars"></i>
                     </button>
                 </div>
             </div>
             
             <!-- Mobile Navigation -->
-            <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+            <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 border-t border-charcoal-200 dark:border-charcoal-700 pt-4">
                 <div class="flex flex-col space-y-3">
-                    <a th:href="@{/}" class="hover:text-primary-600 dark:hover:text-primary-400">Home</a>
-                    <a th:href="@{/courses}" class="hover:text-primary-600 dark:hover:text-primary-400">Courses</a>
+                    <a th:href="@{/}" class="text-text-secondary hover:text-primary-600 dark:text-text-muted dark:hover:text-primary-400">Home</a>
+                    <a th:href="@{/courses}" class="text-text-secondary hover:text-primary-600 dark:text-text-muted dark:hover:text-primary-400">Courses</a>
                     
                     <div sec:authorize="isAuthenticated()" class="space-y-2">
-                        <a th:href="@{/dashboard}" class="block hover:text-primary-600 dark:hover:text-primary-400">Dashboard</a>
+                        <a th:href="@{/dashboard}" class="block text-text-secondary hover:text-primary-600 dark:text-text-muted dark:hover:text-primary-400">Dashboard</a>
                         
                         <a sec:authorize="hasAuthority('INSTRUCTOR')" 
                            th:href="@{/instructor/courses}" 
-                           class="block hover:text-primary-600 dark:hover:text-primary-400">My Courses</a>
+                           class="block text-text-secondary hover:text-primary-600 dark:text-text-muted dark:hover:text-primary-400">My Courses</a>
                         
                         <a sec:authorize="hasAuthority('LEARNER')" 
                            th:href="@{/learner/enrollments}" 
-                           class="block hover:text-primary-600 dark:hover:text-primary-400">My Enrollments</a>
+                           class="block text-text-secondary hover:text-primary-600 dark:text-text-muted dark:hover:text-primary-400">My Enrollments</a>
                         
-                        <hr class="my-2 border-gray-200 dark:border-gray-700">
+                        <hr class="my-2 border-charcoal-200 dark:border-charcoal-700">
                         
                         <form th:action="@{/logout}" method="post">
                             <button type="submit" class="text-red-600 dark:text-red-400">
@@ -448,20 +526,20 @@
                 </div>
                 
                 <!-- Footer for authenticated users (inside main content area) -->
-                <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-8" style="margin-left: -2rem; margin-right: -2rem; margin-bottom: 0;">
+                <footer class="bg-bg-secondary dark:bg-bg-darkSecondary border-t border-charcoal-200 dark:border-charcoal-700 mt-8" style="margin-left: -2rem; margin-right: -2rem; margin-bottom: -2rem;">
                     <div class="px-8 py-6">
                         <div class="flex flex-col md:flex-row justify-between items-center">
                             <div class="text-center md:text-left mb-4 md:mb-0">
-                                <p class="text-gray-600 dark:text-gray-400">
+                                <p class="text-text-secondary dark:text-text-muted">
                                     &copy; 2025 <span class="font-semibold text-primary-600 dark:text-primary-400">ActivWork</span>. 
                                     Training Portal for Career Development.
                                 </p>
-                                <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                                <p class="text-sm text-text-muted dark:text-text-muted mt-1">
                                     Empowering IT Professionals with Quality Training
                                 </p>
                             </div>
                             
-                            <div class="flex space-x-4 text-gray-600 dark:text-gray-400">
+                            <div class="flex space-x-4 text-text-secondary dark:text-text-muted">
                                 <a href="#" class="hover:text-primary-600 dark:hover:text-primary-400">
                                     <i class="fab fa-github text-xl"></i>
                                 </a>
@@ -476,7 +554,7 @@
         </div>
         
         <!-- Content without sidebar for non-authenticated users -->
-        <div sec:authorize="!isAuthenticated()" class="container mx-auto px-4 py-8">
+        <div sec:authorize="!isAuthenticated()" class="py-8">
             <div layout:fragment="content">
                 <!-- Page content will be injected here -->
             </div>
@@ -484,20 +562,20 @@
     </main>
     
     <!-- Footer for non-authenticated users -->
-    <footer sec:authorize="!isAuthenticated()" class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto">
-        <div class="container mx-auto px-4 py-6">
+    <footer sec:authorize="!isAuthenticated()" class="bg-bg-secondary dark:bg-bg-darkSecondary border-t border-charcoal-200 dark:border-charcoal-700 mt-auto">
+        <div class="max-w-5xl mx-auto px-6 py-6">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="text-center md:text-left mb-4 md:mb-0">
-                    <p class="text-gray-600 dark:text-gray-400">
+                    <p class="text-text-secondary dark:text-text-muted">
                         &copy; 2025 <span class="font-semibold text-primary-600 dark:text-primary-400">ActivWork</span>. 
                         Training Portal for Career Development.
                     </p>
-                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                    <p class="text-sm text-text-muted dark:text-text-muted mt-1">
                         Empowering IT Professionals with Quality Training
                     </p>
                 </div>
                 
-                <div class="flex space-x-4 text-gray-600 dark:text-gray-400">
+                <div class="flex space-x-4 text-text-secondary dark:text-text-muted">
                     <a href="#" class="hover:text-primary-600 dark:hover:text-primary-400">
                         <i class="fab fa-github text-xl"></i>
                     </a>

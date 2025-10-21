@@ -2,6 +2,7 @@ package com.activwork.etms.service;
 
 import com.activwork.etms.dto.CourseSectionCreateDto;
 import com.activwork.etms.dto.CourseSectionDto;
+import com.activwork.etms.dto.MaterialResponseDto;
 import com.activwork.etms.exception.ResourceNotFoundException;
 import com.activwork.etms.model.Course;
 import com.activwork.etms.model.CourseSection;

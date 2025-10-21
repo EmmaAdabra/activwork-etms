@@ -9,22 +9,23 @@
 <div layout:fragment="content">
     <!-- Welcome Section -->
     <div class="mb-8">
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 class="text-4xl font-bold text-text-primary dark:text-text-light mb-2">
             Welcome back, <span th:text="${user.name}">Candidate</span>!
         </h1>
-        <p class="text-gray-600 dark:text-gray-400">
+        <p class="text-text-secondary dark:text-text-muted">
             Continue developing your IT skills for career success
         </p>
     </div>
     
     <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <!-- Active Enrollments -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div class="bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Active Courses</p>
-                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white" 
+                    <p class="text-text-secondary dark:text-text-muted text-sm mb-1">Active Courses</p>
+                    <h3 class="text-3xl font-bold text-text-primary dark:text-text-light" 
                         th:text="${#lists.size(activeEnrollments)}">3</h3>
                 </div>
                 <div class="bg-primary-100 dark:bg-primary-900 rounded-full p-4">
@@ -34,11 +35,11 @@
         </div>
         
         <!-- Total Enrollments -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div class="bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Courses</p>
-                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white" th:text="${totalEnrollments}">5</h3>
+                    <p class="text-text-secondary dark:text-text-muted text-sm mb-1">Total Courses</p>
+                    <h3 class="text-3xl font-bold text-text-primary dark:text-text-light" th:text="${totalEnrollments}">5</h3>
                 </div>
                 <div class="bg-green-100 dark:bg-green-900 rounded-full p-4">
                     <i class="fas fa-graduation-cap text-2xl text-green-600 dark:text-green-400"></i>
@@ -47,11 +48,11 @@
         </div>
         
         <!-- Completed Courses -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div class="bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Completed</p>
-                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white">
+                    <p class="text-text-secondary dark:text-text-muted text-sm mb-1">Completed</p>
+                    <h3 class="text-3xl font-bold text-text-primary dark:text-text-light">
                         <span th:text="${completedCount}">1</span>
                     </h3>
                 </div>
@@ -60,10 +61,12 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
     
     <!-- Quick Actions -->
-    <div class="bg-gradient-to-r from-primary-600 to-primary-800 dark:from-primary-700 dark:to-primary-900 rounded-lg shadow-xl p-8 mb-8 text-white">
+    <div>
+        <div class="bg-gradient-to-r from-primary-600 to-primary-800 dark:from-primary-700 dark:to-primary-900 rounded-lg shadow-xl p-8 mb-8 text-white">
         <h2 class="text-2xl font-bold mb-6">
             <i class="fas fa-bolt mr-2"></i>Quick Actions
         </h2>
@@ -86,12 +89,13 @@
                 <p class="font-semibold">View Progress</p>
             </a>
         </div>
+        </div>
     </div>
     
     <!-- Active Courses -->
     <div id="active-courses" class="mb-8">
         <div class="flex items-center justify-between mb-6">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 class="text-2xl font-bold text-text-primary dark:text-text-light">
                 <i class="fas fa-book-reader mr-2"></i>Continue Learning
             </h2>
             <a th:href="@{/learner/enrollments}" 

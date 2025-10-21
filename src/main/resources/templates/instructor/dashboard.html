@@ -9,22 +9,23 @@
 <div layout:fragment="content">
     <!-- Welcome Section -->
     <div class="mb-8">
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 class="text-4xl font-bold text-text-primary dark:text-text-light mb-2">
             Welcome back, <span th:text="${user.name}">Instructor</span>!
         </h1>
-        <p class="text-gray-600 dark:text-gray-400">
+        <p class="text-text-secondary dark:text-text-muted">
             Manage your training courses and track candidate progress
         </p>
     </div>
     
     <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <!-- Total Courses -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div class="bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Courses</p>
-                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white" th:text="${totalCourses}">6</h3>
+                    <p class="text-text-secondary dark:text-text-muted text-sm mb-1">Total Courses</p>
+                    <h3 class="text-3xl font-bold text-text-primary dark:text-text-light" th:text="${totalCourses}">6</h3>
                 </div>
                 <div class="bg-primary-100 dark:bg-primary-900 rounded-full p-4">
                     <i class="fas fa-book text-2xl text-primary-600 dark:text-primary-400"></i>
@@ -33,11 +34,11 @@
         </div>
         
         <!-- Published Courses -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div class="bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Published</p>
-                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white">
+                    <p class="text-text-secondary dark:text-text-muted text-sm mb-1">Published</p>
+                    <h3 class="text-3xl font-bold text-text-primary dark:text-text-light">
                         <span th:text="${publishedCount}">4</span>
                     </h3>
                 </div>
@@ -48,11 +49,11 @@
         </div>
         
         <!-- Draft Courses -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div class="bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Drafts</p>
-                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white">
+                    <p class="text-text-secondary dark:text-text-muted text-sm mb-1">Drafts</p>
+                    <h3 class="text-3xl font-bold text-text-primary dark:text-text-light">
                         <span th:text="${draftCount}">2</span>
                     </h3>
                 </div>
@@ -61,10 +62,12 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
     
     <!-- Quick Actions -->
-    <div class="bg-gradient-to-r from-primary-600 to-primary-800 dark:from-primary-700 dark:to-primary-900 rounded-lg shadow-xl p-8 mb-8 text-white">
+    <div>
+        <div class="bg-gradient-to-r from-primary-600 to-primary-800 dark:from-primary-700 dark:to-primary-900 rounded-lg shadow-xl p-8 mb-8 text-white">
         <h2 class="text-2xl font-bold mb-6">
             <i class="fas fa-bolt mr-2"></i>Quick Actions
         </h2>
@@ -87,12 +90,13 @@
                 <p class="font-semibold">View Analytics</p>
             </a>
         </div>
+        </div>
     </div>
     
     <!-- Recent Courses -->
     <div id="recent-courses" class="mb-8">
         <div class="flex items-center justify-between mb-6">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 class="text-2xl font-bold text-text-primary dark:text-text-light">
                 <i class="fas fa-book-open mr-2"></i>Your Courses
             </h2>
             <a th:href="@{/instructor/courses}" 
@@ -104,12 +108,12 @@
         <!-- Courses List -->
         <div th:if="${courses != null and !courses.empty}" class="space-y-4">
             <div th:each="course : ${courses}" 
-                 class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition">
+                 class="bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md p-6 hover:shadow-lg transition">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <!-- Course Info -->
                     <div class="flex-1">
                         <div class="flex items-center gap-3 mb-2">
-                            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                            <h3 class="text-xl font-bold text-text-primary dark:text-text-light">
                                 <a th:href="@{/courses/{id}(id=${course.id})}" 
                                    th:text="${course.title}"
                                    class="hover:text-primary-600 dark:hover:text-primary-400">
@@ -120,12 +124,12 @@
                             <!-- Status Badge -->
                             <span th:class="${course.status.name() == 'PUBLISHED' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' : 
                                              course.status.name() == 'DRAFT' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300' : 
-                                             'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} + ' inline-block px-4 py-2 text-xs font-semibold rounded-full'"
+                                             'bg-charcoal-100 dark:bg-charcoal-700 text-charcoal-700 dark:text-charcoal-300'} + ' inline-block px-4 py-2 text-xs font-semibold rounded-full'"
                                   th:text="${course.status}">PUBLISHED</span>
                         </div>
                         
                         <!-- Course Meta -->
-                        <div class="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
+                        <div class="flex flex-wrap gap-4 text-sm text-text-secondary dark:text-text-muted">
                             <span>
                                 <i class="fas fa-tag mr-1"></i>
                                 <span th:text="${course.categoryDisplayName}">Programming</span>
@@ -144,6 +148,11 @@
                     
                     <!-- Actions -->
                     <div class="flex flex-wrap gap-2">
+                        <a th:href="@{/instructor/courses/{id}/preview(id=${course.id})}" 
+                           class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold rounded-lg transition">
+                            <i class="fas fa-eye mr-1"></i>Preview
+                        </a>
+                        
                         <a th:href="@{/instructor/courses/{id}/edit(id=${course.id})}" 
                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition">
                             <i class="fas fa-edit mr-1"></i>Edit
@@ -165,10 +174,10 @@
         
         <!-- Empty State -->
         <div th:if="${courses == null or courses.empty}" 
-             class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-            <i class="fas fa-book text-6xl text-gray-400 mb-4"></i>
-            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Courses Yet</h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">
+             class="text-center py-12 bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md">
+            <i class="fas fa-book text-6xl text-text-muted mb-4"></i>
+            <h3 class="text-xl font-semibold text-text-primary dark:text-text-light mb-2">No Courses Yet</h3>
+            <p class="text-text-secondary dark:text-text-muted mb-6">
                 Create your first training course to support candidate development
             </p>
             <a th:href="@{/instructor/courses/create}" 

@@ -9,17 +9,17 @@
 <div layout:fragment="content">
     <!-- Page Header -->
     <div class="mb-8">
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 class="text-4xl font-bold text-text-primary dark:text-text-light mb-2">
             <i class="fas fa-book-reader mr-2"></i>My Enrollments
         </h1>
-        <p class="text-gray-600 dark:text-gray-400">
+        <p class="text-text-secondary dark:text-text-muted">
             Track all your enrolled courses and progress
         </p>
     </div>
     
     <!-- Filter Tabs -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-8">
-        <div class="flex border-b border-gray-200 dark:border-gray-700">
+    <div class="bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md mb-8">
+        <div class="flex border-b border-charcoal-200 dark:border-charcoal-700">
             <button onclick="filterEnrollments('all')" 
                     class="enroll-filter-tab active px-6 py-4 font-semibold border-b-2 transition">
                 All (<span th:text="${#lists.size(enrollments)}">5</span>)
@@ -40,7 +40,7 @@
          class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div th:each="enrollment : ${enrollments}" 
              th:attr="data-enrollment-status=${enrollment.status}"
-             class="enrollment-card bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition overflow-hidden">
+             class="enrollment-card bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md hover:shadow-lg transition overflow-hidden">
             <!-- Course Thumbnail -->
             <div class="h-48 bg-gradient-to-r from-primary-500 to-primary-700 flex items-center justify-center relative">
                 <i th:if="${enrollment.courseThumbnailUrl == null}" 
@@ -68,7 +68,7 @@
             
             <!-- Course Content -->
             <div class="p-6">
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 line-clamp-2">
+                <h3 class="text-xl font-bold text-text-primary dark:text-text-light mb-4 line-clamp-2">
                     <a th:href="@{/learner/enrollments/{id}(id=${enrollment.id})}" 
                        th:text="${enrollment.courseTitle}"
                        class="hover:text-primary-600 dark:hover:text-primary-400">
@@ -79,13 +79,13 @@
                 <!-- Progress Section -->
                 <div class="mb-4">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Overall Progress</span>
+                        <span class="text-sm font-medium text-text-secondary dark:text-text-muted">Overall Progress</span>
                         <span class="text-sm font-bold text-primary-600 dark:text-primary-400" 
                               th:text="${enrollment.progressPercent != null ? #numbers.formatDecimal(enrollment.progressPercent, 1, 0) + '%' : '0%'}">
                             75%
                         </span>
                     </div>
-                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                    <div class="w-full bg-charcoal-200 dark:bg-charcoal-700 rounded-full h-3">
                         <div class="bg-primary-600 dark:bg-primary-500 h-3 rounded-full progress-bar-fill" 
                              th:style="'width: ' + ${enrollment.progressPercent ?: 0} + '%'"></div>
                     </div>
@@ -93,24 +93,24 @@
                 
                 <!-- Materials Progress -->
                 <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
-                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                        <p class="text-gray-600 dark:text-gray-400 mb-1">Materials</p>
-                        <p class="font-semibold text-gray-900 dark:text-white">
+                    <div class="bg-charcoal-50 dark:bg-charcoal-800 rounded-lg p-3">
+                        <p class="text-text-secondary dark:text-text-muted mb-1">Materials</p>
+                        <p class="font-semibold text-text-primary dark:text-text-light">
                             <span th:text="${enrollment.completedMaterials ?: 0}">5</span> / 
                             <span th:text="${enrollment.totalMaterials ?: 0}">10</span>
                         </p>
                     </div>
                     
-                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                        <p class="text-gray-600 dark:text-gray-400 mb-1">Time Spent</p>
-                        <p class="font-semibold text-gray-900 dark:text-white">
+                    <div class="bg-charcoal-50 dark:bg-charcoal-800 rounded-lg p-3">
+                        <p class="text-text-secondary dark:text-text-muted mb-1">Time Spent</p>
+                        <p class="font-semibold text-text-primary dark:text-text-light">
                             <span th:text="${enrollment.timeSpentMinutes != null ? (enrollment.timeSpentMinutes / 60) : 0}">5</span>h
                         </p>
                     </div>
                 </div>
                 
                 <!-- Enrollment Dates -->
-                <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                <div class="text-xs text-text-muted dark:text-text-muted mb-4">
                     <p>Enrolled: <span th:text="${#temporals.format(enrollment.enrolledAt, 'MMM dd, yyyy')}">Oct 10, 2025</span></p>
                     <p th:if="${enrollment.lastAccessed != null}">
                         Last accessed: <span th:text="${#temporals.format(enrollment.lastAccessed, 'MMM dd, yyyy')}">Oct 12, 2025</span>
@@ -140,10 +140,10 @@
     
     <!-- Empty State -->
     <div th:if="${enrollments == null or enrollments.empty}" 
-         class="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-        <i class="fas fa-inbox text-6xl text-gray-400 mb-4"></i>
-        <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">No Enrollments Yet</h3>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">
+         class="text-center py-16 bg-bg-secondary dark:bg-bg-darkSecondary rounded-lg shadow-md">
+        <i class="fas fa-inbox text-6xl text-text-muted mb-4"></i>
+        <h3 class="text-2xl font-semibold text-text-primary dark:text-text-light mb-2">No Enrollments Yet</h3>
+        <p class="text-text-secondary dark:text-text-muted mb-6">
             You haven't enrolled in any training courses yet. Start enhancing your skills today!
         </p>
         <a th:href="@{/courses}" 
@@ -163,11 +163,11 @@
             // Update tab styles
             tabs.forEach(tab => {
                 tab.classList.remove('active', 'border-primary-600', 'text-primary-600', 'dark:border-primary-400', 'dark:text-primary-400');
-                tab.classList.add('text-gray-600', 'dark:text-gray-400');
+                tab.classList.add('text-text-secondary', 'dark:text-text-muted');
             });
             
             event.target.classList.add('active', 'border-primary-600', 'text-primary-600', 'dark:border-primary-400', 'dark:text-primary-400');
-            event.target.classList.remove('text-gray-600', 'dark:text-gray-400');
+            event.target.classList.remove('text-text-secondary', 'dark:text-text-muted');
             
             // Filter cards
             cards.forEach(card => {

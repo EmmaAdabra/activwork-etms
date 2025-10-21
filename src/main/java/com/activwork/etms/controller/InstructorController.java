@@ -19,10 +19,12 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.ResponseEntity;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Controller for instructor-specific operations.
@@ -464,6 +466,92 @@ public class InstructorController {
         return "redirect:/instructor/courses";
     }
 
+    /**
+     * Preview course as learners see it.
+     * 
+     * @param id the course UUID
+     * @param model the model for view
+     * @return course preview view
+     */
+    @GetMapping("/courses/{id}/preview")
+    public String previewCourse(@PathVariable UUID id, Model model) {
+        log.info("Previewing course: {}", id);
+        
+        CourseResponseDto course = courseService.getCourseById(id);
+        
+        // Load course sections with materials
+        List<CourseSectionDto> sections = courseSectionService.getSectionsWithMaterialsByCourseId(id);
+        
+        // If no sections exist, load materials directly
+        List<MaterialResponseDto> directMaterials = null;
+        if (sections.isEmpty()) {
+            log.info("No sections found for course: {}, loading materials directly", id);
+            directMaterials = materialService.getActiveMaterialsByCourse(id);
+        }
+        
+        // Load course feedback (first 5 visible feedback)
+        List<FeedbackResponseDto> feedback = feedbackService.getVisibleFeedbackByCourse(id);
+        List<FeedbackResponseDto> displayedFeedback = feedback.stream()
+                .limit(5)
+                .collect(Collectors.toList());
+        
+        model.addAttribute("course", course);
+        model.addAttribute("sections", sections);
+        model.addAttribute("directMaterials", directMaterials);
+        model.addAttribute("feedback", displayedFeedback);
+        model.addAttribute("totalFeedbackCount", feedback.size());
+        model.addAttribute("hasMoreFeedback", feedback.size() > 5);
+        model.addAttribute("isPreview", true); // Flag to show instructor controls
+        
+        return "instructor/course-preview";
+    }
+
+    /**
+     * View/stream a material file (for instructor preview).
+     * 
+     * @param id the material UUID
+     * @param userDetails the authenticated user
+     * @return file resource
+     */
+    @GetMapping("/materials/{id}/view")
+    public ResponseEntity<org.springframework.core.io.Resource> viewMaterial(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            var user = userDetailsService.getUserByEmail(userDetails.getUsername());
+            MaterialResponseDto material = materialService.getMaterialById(id);
+            
+            // Verify user is the course instructor
+            CourseResponseDto course = courseService.getCourseById(material.getCourseId());
+            if (!course.getInstructorId().equals(user.getId())) {
+                log.warn("Instructor {} attempted to access material {} for course they don't own", 
+                         user.getId(), id);
+                return ResponseEntity.status(403).build();
+            }
+            
+            // Load file resource
+            org.springframework.core.io.Resource resource = fileStorageService.loadFileAsResource(material.getFilename(), "material");
+            
+            // Determine content type
+            String contentType = material.getMimeType();
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+            
+            // Return file
+            return ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, 
+                            "inline; filename=\"" + material.getOriginalFilename() + "\"")
+                    .body(resource);
+                    
+        } catch (Exception e) {
+            log.error("Error loading material: {}", id, e);
+            return ResponseEntity.status(500).build();
+        }
+    }
+    
     /**
      * View enrollments for a course.
      * 
