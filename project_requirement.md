@@ -1,21 +1,17 @@
-**Employment Training Management System (ETMS) --- Developer-Focused
+**ActivWork Training Portal --- Developer-Focused
 Architecture Blueprint**
 
 ## 1. Project Overview
 
-The Employment Training Management System (ETMS) is a locally hosted web
-application designed to manage training courses for IT professionals.
-Instructors can create, manage, and schedule courses, while learners can
-enroll, access materials, attend live sessions, provide feedback, and
-track progress.\
+The ActivWork Training Portal is a locally hosted web application designed for recruitment agencies to manage training courses for IT professionals and candidates. Instructors can create, manage, and schedule courses with organized sections, while candidates can enroll, access materials, attend live sessions, provide feedback, and track progress.\
 The system emphasizes **clean software architecture**, **modularity**,
 **maintainability**, and **scalability**, following **Layered
 Architecture**, **MVC**, and selected **GRASP** patterns.
 
 **1.1 Goals & scope (short)**
 
--   **Primary goal:** Build a locally-hosted prototype for an
-    *Employment Training Management System (ETMS)* demonstrating layered
+-   **Primary goal:** Build a locally-hosted prototype for the
+    *ActivWork Training Portal* demonstrating layered
     architecture (Presentation → Service → Persistence),
     Model-View-Controller (MVC) pattern, and at least one General
     Responsibility Assignment Software Pattern (GRASP).
@@ -28,10 +24,10 @@ Architecture**, **MVC**, and selected **GRASP** patterns.
 
 **2.1 Actors**
 
--   **Instructor** --- creates/manages courses, uploads materials,
-    schedules live sessions, views enrolled learners and feedback.
+-   **Instructor** --- creates/manages courses with sections, uploads materials,
+    schedules live sessions, views enrolled candidates and feedback.
 
--   **Learner** --- views courses, enrolls, accesses materials, attends
+-   **Candidate** --- views courses, enrolls, accesses materials by sections, attends
     live sessions, provides feedback, tracks progress.
 
 -   *(Out of scope for prototype)*: Administrator, payments, AI
@@ -58,13 +54,17 @@ Architecture**, **MVC**, and selected **GRASP** patterns.
   FR4      Material Upload   Instructors upload PDFs,   CRUD
                              videos, notes, images      
 
-  FR5      Course Enrollment Learners view and enroll   Read (View), Create
+  FR4.1    Course Sections   Instructors organize       CRUD
+                             materials into logical     
+                             sections (chapters)        
+
+  FR5      Course Enrollment Candidates view and enroll Read (View), Create
                              in courses                 (Enroll)
 
-  FR6      Progress Tracking Track learner's course     Read, Update
-                             completion                 
+  FR6      Progress Tracking Track candidate's course   Read, Update
+                             completion per section     
 
-  FR7      Feedback &        Learners rate and review   Create, Read
+  FR7      Feedback &        Candidates rate and review Create, Read
            Ratings           courses                    
 
   FR8      Live Session      Instructors schedule       CRUD
@@ -72,10 +72,10 @@ Architecture**, **MVC**, and selected **GRASP** patterns.
 
   FR9      Dashboard         Personalized per user type Read (dynamic)
 
-  FR10     Search & Filter   Learners can search/filter Read (query)
-           Courses           available courses          
+  FR10     Search & Filter   Candidates can search/     Read (query)
+           Courses           filter available courses   
 
-  FR11     Quick             Registration for learners  Create
+  FR11     Quick             Registration for candidates Create
            Registration      & instructors (DB          
                              population)                
   -----------------------------------------------------------------------------
@@ -180,23 +180,29 @@ Use this directly to build your class diagram and DB schema.
     multimedia support, automatic rating calculations, analytics tracking, 
     featured courses, array fields for prerequisites/objectives/tags.
 
--   **Material** (id, course_id, filename, original_filename, mime_type, 
+-   **Material** (id, course_id, section_id, filename, original_filename, mime_type, 
     material_type, path, file_size, duration_seconds, thumbnail_url, download_count, 
-    view_count, is_downloadable, is_required, display_order, uploaded_at, 
+    view_count, is_downloadable, is_required, display_order, material_order, uploaded_at, 
     description, is_active).
     
     *Enhancements:* Type categorization (VIDEO, PDF, DOCUMENT, PRESENTATION, etc.), 
     video duration tracking, analytics (downloads/views), display ordering, 
-    required materials flag.
+    required materials flag, section assignment for organized learning.
 
--   **Enrollment** (id, learner_id, course_id, enrolled_at, status, 
+-   **CourseSection** (id, course_id, title, description, section_order, 
+    duration_minutes, is_active, created_at, updated_at).
+    
+    *Purpose:* Organize course materials into logical groups (chapters/sections).
+    Enables structured learning paths with section-based progress tracking.
+
+-   **Enrollment** (id, candidate_id, course_id, enrolled_at, status, 
     progress_percent, completed_materials, total_materials, time_spent_minutes, 
     last_accessed, completion_date, certificate_issued, certificate_url, notes).
     
     *Enhancements:* Comprehensive progress tracking, time spent tracking, 
-    certificate generation, completion tracking, learner notes.
+    certificate generation, completion tracking, candidate notes.
 
--   **Feedback** (id, learner_id, course_id, rating int 1..5, comment, 
+-   **Feedback** (id, candidate_id, course_id, rating int 1..5, comment, 
     created_at, is_visible).
     
     *Enhancements:* Visibility control for moderation, automatic course rating 
@@ -238,16 +244,17 @@ Use this directly to build your class diagram and DB schema.
     *Purpose:* Historical analytics for instructors. Daily snapshots of course 
     performance including views, enrollments, ratings, and revenue tracking.
 
--   **Role** (enum: INSTRUCTOR, LEARNER) --- PostgreSQL ENUM type for type safety.
+-   **Role** (enum: INSTRUCTOR, CANDIDATE) --- PostgreSQL ENUM type for type safety.
 
 **Relationships (Enhanced ER)**
 
 #### Core Relationships
 -   User (1) → (N) Course where User.role = INSTRUCTOR
--   Course (1) → (N) Material
+-   Course (1) → (N) CourseSection
+-   CourseSection (1) → (N) Material
 -   Course (1) → (N) LiveSession
--   User[Learner] (1) → (N) Enrollment ← (N) Course (many-to-many)
--   Course (1) → (N) Feedback ← (N) User[Learner]
+-   User[Candidate] (1) → (N) Enrollment ← (N) Course (many-to-many)
+-   Course (1) → (N) Feedback ← (N) User[Candidate]
 
 #### Innovative Relationships
 -   Course (1) → (N) CoursePrerequisite (self-referencing for course dependencies)
@@ -330,6 +337,14 @@ com.activwork.etms
 -   POST /instructor/courses/{id}/materials/upload → Upload material
 -   DELETE /instructor/courses/{id}/materials/{materialId} → Delete material
 
+**Course Section Management**
+
+-   GET /instructor/courses/{id}/sections → List course sections
+-   POST /instructor/courses/{id}/sections → Create section
+-   PUT /instructor/courses/{id}/sections/{sectionId} → Update section
+-   DELETE /instructor/courses/{id}/sections/{sectionId} → Delete section
+-   POST /instructor/courses/{id}/sections/{sectionId}/materials/{materialId} → Assign material to section
+
 **Live Session Management**
 
 -   GET /instructor/courses/{id}/sessions → List course sessions
@@ -337,18 +352,18 @@ com.activwork.etms
 -   PUT /instructor/courses/{id}/sessions/{sessionId} → Update session
 -   DELETE /instructor/courses/{id}/sessions/{sessionId} → Delete session
 
-**Learner Course Interaction**
+**Candidate Course Interaction**
 
 -   GET /courses → Browse/search courses
 -   POST /courses/{id}/enroll → Enroll in course
--   GET /courses/{id} → View course details & materials
+-   GET /courses/{id} → View course details & materials by sections
 -   POST /courses/{id}/feedback → Submit course feedback
 
 **Progress Tracking**
 
--   GET /learner/courses/{id}/progress → View course progress
--   PUT /learner/courses/{id}/progress → Update progress (mark material complete)
--   GET /learner/dashboard → Learner dashboard with progress overview
+-   GET /candidate/courses/{id}/progress → View course progress by sections
+-   PUT /candidate/courses/{id}/progress → Update progress (mark material complete)
+-   GET /candidate/dashboard → Candidate dashboard with progress overview
 
 **Future API Mapping (Optional / Future React Migration)**
 
@@ -468,36 +483,38 @@ modern tools without rewriting core business logic.
 ### What Makes This System Modern & Production-Ready
 
 #### Beyond Basic CRUD
-1. **10 Tables Instead of 6**: Added CoursePrerequisite, MaterialProgress, Notification, CourseAnalytics
-2. **Automatic Calculations**: Triggers handle ratings, counts, and progress automatically
-3. **Rich Data Types**: ENUMs, Arrays, JSONB for flexible data storage
-4. **Complete Audit Trail**: Track user activity, material views, session attendance
+1. **11 Tables Instead of 6**: Added CourseSection, CoursePrerequisite, MaterialProgress, Notification, CourseAnalytics
+2. **Course Sections**: Organize materials into logical groups (chapters) with accordion UI
+3. **Automatic Calculations**: Triggers handle ratings, counts, and progress automatically
+4. **Rich Data Types**: ENUMs, Arrays, JSONB for flexible data storage
+5. **Complete Audit Trail**: Track user activity, material views, session attendance
 
 #### Advanced User Experience
-5. **Video Resume Feature**: Save playback position (last_position_seconds)
-6. **Notification System**: Real-time alerts for course updates, sessions, certificates
-7. **Course Prerequisites**: Structured learning paths with dependencies
-8. **Analytics Dashboard**: Daily performance metrics for instructors
+6. **Video Resume Feature**: Save playback position (last_position_seconds)
+7. **Notification System**: Real-time alerts for course updates, sessions, certificates
+8. **Course Prerequisites**: Structured learning paths with dependencies
+9. **Analytics Dashboard**: Daily performance metrics for instructors
+10. **Accordion UI**: LinkedIn Learning-style section navigation for candidates
 
 #### Enterprise-Grade Features
-9. **Multi-language Support**: Timezone and language preferences per user
-10. **Social Integration**: LinkedIn/GitHub profile links
-11. **Email Verification**: Secure account activation workflow
-12. **Password Reset**: Token-based password recovery
-13. **Certificate Generation**: Automated certificate issuance on completion
+11. **Multi-language Support**: Timezone and language preferences per user
+12. **Social Integration**: LinkedIn/GitHub profile links
+13. **Email Verification**: Secure account activation workflow
+14. **Password Reset**: Token-based password recovery
+15. **Certificate Generation**: Automated certificate issuance on completion
 
 #### Production-Ready Database
-14. **42+ Indexes**: Optimized query performance
-15. **CHECK Constraints**: Data validation at database level
-16. **Soft Deletes**: is_active flags for data preservation
-17. **Cascading Rules**: Proper referential integrity
-18. **Type Safety**: PostgreSQL ENUMs prevent invalid data
+16. **42+ Indexes**: Optimized query performance
+17. **CHECK Constraints**: Data validation at database level
+18. **Soft Deletes**: is_active flags for data preservation
+19. **Cascading Rules**: Proper referential integrity
+20. **Type Safety**: PostgreSQL ENUMs prevent invalid data
 
 #### Scalability Features
-19. **UUID Keys**: Distributed-system ready
-20. **Array Fields**: Efficient storage of related data
-21. **JSONB Metadata**: Flexible configuration storage
-22. **Time-Series Data**: CourseAnalytics for historical tracking
+21. **UUID Keys**: Distributed-system ready
+22. **Array Fields**: Efficient storage of related data
+23. **JSONB Metadata**: Flexible configuration storage
+24. **Time-Series Data**: CourseAnalytics for historical tracking
 
 **11. Conclusion**
 
@@ -527,18 +544,19 @@ This document is a **developer blueprint** that:
 **12. Implementation Priority for Assessment**
 
 **Phase 1 (Core Features - Week 1):**
-1. Database setup with all 10 tables ✅ **COMPLETED**
-2. User authentication and role management (INSTRUCTOR/LEARNER)
+1. Database setup with all 11 tables ✅ **COMPLETED**
+2. User authentication and role management (INSTRUCTOR/CANDIDATE)
 3. Course CRUD operations with status lifecycle (DRAFT→PUBLISHED→ARCHIVED)
 4. Basic enrollment system
 5. Material upload with type categorization
 
 **Phase 2 (Enhanced Features - Week 2):**
-1. Granular progress tracking system (MaterialProgress)
-2. Feedback and automatic rating calculation (triggers)
-3. Live session management with status tracking
-4. Notification system for user engagement
-5. Dashboard views with analytics
+1. Course sections system with accordion UI ✅ **COMPLETED**
+2. Granular progress tracking system (MaterialProgress)
+3. Feedback and automatic rating calculation (triggers)
+4. Live session management with status tracking
+5. Notification system for user engagement
+6. Dashboard views with analytics
 
 **Phase 3 (Innovative Features - Week 2-3):**
 1. Course prerequisites and learning paths
@@ -555,11 +573,12 @@ This document is a **developer blueprint** that:
 5. Documentation and code annotations for GRASP patterns
 
 ### Database Setup Status
-✅ **Schema Created**: All 10 tables with relationships
+✅ **Schema Created**: All 11 tables with relationships (including CourseSection)
 ✅ **Indexes**: 42+ indexes for performance
 ✅ **Triggers**: 3 sophisticated triggers for automation
 ✅ **Functions**: 3 PL/pgSQL functions for business logic
 ✅ **Sample Data**: 9 users, 6 courses, 7 materials, 10 enrollments, 4 feedback, 4 sessions
 ✅ **Constraints**: CHECK, UNIQUE, and FOREIGN KEY constraints
 ✅ **ENUMs**: 7 custom types for data integrity
+✅ **Course Sections**: Full implementation with accordion UI ✅ **COMPLETED**
 ✅ **Verified**: Database populated and tested successfully
