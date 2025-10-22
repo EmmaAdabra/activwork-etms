@@ -304,16 +304,17 @@ public class CourseService {
     }
 
     /**
-     * Delete a course.
+     * Delete a course permanently (hard delete).
+     * All related data (enrollments, materials, feedback, etc.) will be cascade deleted.
      * 
      * @param courseId the course UUID
      * @param instructorId the instructor deleting the course
      * @throws ResourceNotFoundException if course not found
-     * @throws IllegalArgumentException if instructor doesn't own the course or course has enrollments
+     * @throws IllegalArgumentException if instructor doesn't own the course
      */
     @Transactional
     public void deleteCourse(UUID courseId, UUID instructorId) {
-        log.info("Deleting course: {}", courseId);
+        log.info("Deleting course: {} by instructor: {}", courseId, instructorId);
         
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course", courseId));
@@ -323,13 +324,16 @@ public class CourseService {
             throw new IllegalArgumentException("Only the course instructor can delete this course");
         }
         
-        // Business rule: Cannot delete course with active enrollments
-        if (course.getEnrollmentCount() != null && course.getEnrollmentCount() > 0) {
-            throw new IllegalArgumentException("Cannot delete course with existing enrollments. Archive it instead.");
-        }
-        
+        // Delete the course - database cascade delete will handle:
+        // - All enrollments
+        // - All material progress records  
+        // - All feedback
+        // - All materials
+        // - All course sections
+        // The enrollment_count trigger will be invoked for each enrollment
         courseRepository.delete(course);
-        log.info("Course deleted successfully: {}", courseId);
+        
+        log.info("Course deleted successfully (with cascade): {}", courseId);
     }
 
     /**

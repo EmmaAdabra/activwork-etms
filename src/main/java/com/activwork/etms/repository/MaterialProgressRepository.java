@@ -49,4 +49,12 @@ public interface MaterialProgressRepository extends JpaRepository<MaterialProgre
      * @return number of completed materials
      */
     long countByEnrollmentIdAndIsCompleted(UUID enrollmentId, Boolean isCompleted);
+
+    /**
+     * Delete all material progress for an enrollment.
+     * Used when canceling an enrollment to clean up progress data.
+     * 
+     * @param enrollmentId the enrollment UUID
+     */
+    void deleteByEnrollmentId(UUID enrollmentId);
 }

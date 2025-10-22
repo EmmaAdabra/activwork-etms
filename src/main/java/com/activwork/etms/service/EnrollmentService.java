@@ -44,6 +44,7 @@ public class EnrollmentService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final MaterialRepository materialRepository;
+    private final MaterialProgressRepository materialProgressRepository;
 
     /**
      * Enroll a learner in a course.
@@ -232,15 +233,17 @@ public class EnrollmentService {
     }
 
     /**
-     * Cancel enrollment.
+     * Cancel enrollment - Hard delete (completely removes the enrollment).
+     * This allows instructors to delete courses without foreign key constraints.
      * 
      * @param enrollmentId the enrollment UUID
      * @param learnerId the learner canceling (for authorization)
-     * @return canceled enrollment
+     * @throws ResourceNotFoundException if enrollment not found
+     * @throws IllegalArgumentException if learner doesn't own the enrollment
      */
     @Transactional
-    public EnrollmentResponseDto cancelEnrollment(UUID enrollmentId, UUID learnerId) {
-        log.info("Canceling enrollment: {}", enrollmentId);
+    public void cancelEnrollment(UUID enrollmentId, UUID learnerId) {
+        log.info("Canceling enrollment (hard delete): {}", enrollmentId);
         
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Enrollment", enrollmentId));
@@ -255,11 +258,13 @@ public class EnrollmentService {
             throw new IllegalArgumentException("Cannot cancel a completed enrollment");
         }
         
-        enrollment.cancel();
-        Enrollment canceled = enrollmentRepository.save(enrollment);
+        // Delete material progress records first (due to FK constraint)
+        materialProgressRepository.deleteByEnrollmentId(enrollmentId);
         
-        log.info("Enrollment canceled successfully: {}", enrollmentId);
-        return EnrollmentResponseDto.fromEntity(canceled);
+        // Hard delete the enrollment (removes it completely from database)
+        enrollmentRepository.deleteById(enrollmentId);
+        
+        log.info("Enrollment deleted successfully (hard delete): {}", enrollmentId);
     }
 
     /**

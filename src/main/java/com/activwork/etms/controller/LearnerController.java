@@ -247,7 +247,8 @@ public class LearnerController {
     }
 
     /**
-     * Cancel enrollment.
+     * Cancel learner enrollment.
+     * Completely removes the enrollment from the system.
      * 
      * @param id the enrollment UUID
      * @param userDetails the authenticated user
